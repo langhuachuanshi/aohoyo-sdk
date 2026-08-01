@@ -4,9 +4,14 @@ import type { UserInfoResponse, MenuItem, PasswordPolicy } from '../types'
 export function createUserModule(client: SdkClient) {
   return {
     /** 获取当前用户信息（含角色/权限）。
-     *  每次请求后端，不缓存；接入方按需自行缓存（pinia/swr/react-query 等）。 */
-    getUserInfo(): Promise<UserInfoResponse> {
-      return client.get('/v1/auth/info')
+     *  每次请求后端，不缓存；接入方按需自行缓存。
+     *  SDK-3：自动读取 session_mode 更新客户端配置（解决刷新页面回退默认值）。 */
+    async getUserInfo(): Promise<UserInfoResponse> {
+      const info = await client.get<UserInfoResponse>('/v1/auth/info')
+      if (info.session_mode) {
+        client.sessionMode = info.session_mode
+      }
+      return info
     },
 
     /** 修改个人资料 */

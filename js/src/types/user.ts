@@ -21,6 +21,8 @@ export interface UserInfoResponse {
   roles: { id: number; name: string }[]
   permissions: string[]
   app_ids: string[]
+  /** 服务端下发的会话模式（SDK-3：覆盖本地默认值，刷新页面不回退） */
+  session_mode: string
 }
 
 /** 密码策略（GET /v1/auth/password/policy 返回） */
