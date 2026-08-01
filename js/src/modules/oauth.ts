@@ -1,4 +1,6 @@
 import type { SdkClient } from '../client'
+
+// SDK-2 TODO: OAuth loginByUserID 需传 app_id，否则 session_mode 无法按应用下发
 import type { OAuthProvider, OAuthAuthURL, OAuthCallbackResult, OAuthBinding, OAuthBindParams, OAuthUnboundInfo } from '../types/oauth'
 
 export function createOAuthModule(client: SdkClient) {
