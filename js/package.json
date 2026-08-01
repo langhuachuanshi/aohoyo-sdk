@@ -1,0 +1,22 @@
+{
+  "name": "@aohoyo/client-sdk",
+  "version": "0.5.2",
+  "description": "Aohoyo 前端 SDK — 认证、设备采集、用户管理、版本检测",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "peerDependencies": {
+    "axios": "^1.17.0"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^25.9.2",
+    "typescript": "^6.0.3"
+  }
+}
