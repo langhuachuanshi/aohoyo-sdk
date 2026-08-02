@@ -1,5 +1,6 @@
 import type { SdkClient } from '../client'
 import type { UserInfoResponse, MenuItem, PasswordPolicy } from '../types'
+import type { SessionMode } from '../types/auth'
 
 export function createUserModule(client: SdkClient) {
   return {
@@ -9,7 +10,7 @@ export function createUserModule(client: SdkClient) {
     async getUserInfo(): Promise<UserInfoResponse> {
       const info = await client.get<UserInfoResponse>('/v1/auth/info')
       if (info.session_mode) {
-        client.setSessionMode(info.session_mode)
+        client.setSessionMode(info.session_mode as SessionMode)
       }
       return info
     },
