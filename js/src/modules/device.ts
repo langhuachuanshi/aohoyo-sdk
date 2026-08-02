@@ -66,7 +66,7 @@ export function createDeviceModule(client: SdkClient) {
         risk_flags: [],
       }
       const headers = await buildSignHeaders(client.deviceId, client.appId, requireSecret(), JSON.stringify(body))
-      await client.postWithHeaders('/app/devices/report', body, headers)
+      await client.postWithHeaders('/v1/devices/report', body, headers)
     },
 
     /** 设备验证（使用初始化时缓存的设备码） */
@@ -76,7 +76,7 @@ export function createDeviceModule(client: SdkClient) {
         device_id: client.deviceId,
       }
       const headers = await buildSignHeaders(client.deviceId, client.appId, requireSecret(), JSON.stringify(body))
-      return client.postWithHeaders('/app/devices/verify', body, headers)
+      return client.postWithHeaders('/v1/devices/verify', body, headers)
     },
   }
 }

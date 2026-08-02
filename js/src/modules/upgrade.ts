@@ -7,7 +7,7 @@ export function createUpgradeModule(client: SdkClient) {
   return {
     /** 检测是否需要升级 */
     checkUpgrade(): Promise<UpgradeCheckResponse> {
-      return client.post('/app/upgrade/check', {
+      return client.post('/v1/upgrade/check', {
         app_id: client.appId,
         current_version_code: client.versionCode,
         platform: client.platform,
