@@ -1,7 +1,7 @@
 // Package aohoyo 提供 aohoyo 平台服务端 SDK 的统一入口。
 //
-// 一次初始化，按需调用各能力子包。内部组合 s2s（存储）和 stats（统计），
-// 避免调用方重复传 appID/baseURL 初始化多个客户端。
+// 一次初始化，按需调用各能力子包。内部组合 s2s（存储）、stats（统计）、
+// uc（用户中心），避免调用方重复传 appID/baseURL 初始化多个客户端。
 //
 // 最小示例：
 //
@@ -14,7 +14,10 @@
 //	// 统计上报（公开接口）
 //	err = c.Stats.ReportEvent(ctx, stats.Event{...})
 //
-// 子包 s2s / stats 仍可独立使用（向后兼容，已发布版本不受影响）。
+//	// 用户中心操作（Bearer token 透传）
+//	identity, err := c.UC.VerifyToken(ctx, userToken)
+//
+// 子包 s2s / stats / uc 仍可独立使用（向后兼容，已发布版本不受影响）。
 package aohoyo
 
 import (
@@ -24,6 +27,7 @@ import (
 
 	"github.com/langhuachuanshi/aohoyo-sdk/go/s2s"
 	"github.com/langhuachuanshi/aohoyo-sdk/go/stats"
+	"github.com/langhuachuanshi/aohoyo-sdk/go/uc"
 )
 
 // 默认配置
@@ -38,6 +42,7 @@ const (
 // 一次初始化拿到所有能力：
 //   - S2S：存储上传/删除（需 app_secret 签名）
 //   - Stats：统计事件上报（公开接口）
+//   - UC：用户中心 Token 验证 / 用户查询（Bearer token 透传）
 //
 // 未来新增能力（如通知、应用配置查询等）会作为新字段加入本结构。
 type Client struct {
@@ -50,6 +55,9 @@ type Client struct {
 
 	// Stats 统计上报客户端
 	Stats *stats.Client
+
+	// UC 用户中心客户端（token 验证 / 用户查询）
+	UC *uc.Client
 }
 
 // New 创建统一客户端。baseURL 不带尾斜杠。
@@ -78,6 +86,7 @@ func New(appID, appSecret, baseURL string) (*Client, error) {
 		BaseURL:   baseURL,
 		S2S:       newS2SClient(appID, appSecret, baseURL, httpClient),
 		Stats:     newStatsClient(appID, baseURL, httpClient),
+		UC:        newUCClient(baseURL, httpClient),
 	}, nil
 }
 
@@ -91,6 +100,13 @@ func newS2SClient(appID, appSecret, baseURL string, hc *http.Client) *s2s.Client
 // newStatsClient 构造 Stats 客户端，复用统一 HTTP 连接池
 func newStatsClient(appID, baseURL string, hc *http.Client) *stats.Client {
 	c := stats.New(appID, baseURL)
+	c.HTTPClient = hc
+	return c
+}
+
+// newUCClient 构造 UC 客户端，复用统一 HTTP 连接池
+func newUCClient(baseURL string, hc *http.Client) *uc.Client {
+	c := uc.New(baseURL)
 	c.HTTPClient = hc
 	return c
 }
