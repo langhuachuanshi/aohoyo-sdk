@@ -15,7 +15,7 @@ func TestReportEvents_ServerReceivesCorrectPayload(t *testing.T) {
 		Events []Event `json:"events"`
 	}
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/stats/events" {
+		if r.URL.Path != "/v1/stats/events" {
 			t.Errorf("请求路径错误: %s", r.URL.Path)
 		}
 		if r.Header.Get("Content-Type") != "application/json" {

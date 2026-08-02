@@ -41,7 +41,7 @@ func mockPrefixEnv(t *testing.T) (string, string) {
 
 	var tokenRequested int32
 	asSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/storage/upload-token" {
+		if r.URL.Path == "/v1/storage/upload-token" {
 			atomic.AddInt32(&tokenRequested, 1)
 			// 验证请求带 mode=prefix
 			// 返回 bucket 级凭证（Fields 不含 key，KeyPrefix 填前缀）

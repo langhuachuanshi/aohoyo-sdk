@@ -15,7 +15,7 @@ import (
 func TestUploadBatch_Success(t *testing.T) {
 	var received int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/storage/upload" {
+		if r.URL.Path != "/v1/storage/upload" {
 			t.Errorf("路径错误: %s", r.URL.Path)
 		}
 		// 简单校验签名头存在
