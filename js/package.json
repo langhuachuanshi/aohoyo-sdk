@@ -1,6 +1,6 @@
 {
   "name": "@aohoyo/client-sdk",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "Aohoyo 前端 SDK — 认证、设备采集、用户管理、版本检测",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

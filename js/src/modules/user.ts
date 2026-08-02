@@ -9,7 +9,7 @@ export function createUserModule(client: SdkClient) {
     async getUserInfo(): Promise<UserInfoResponse> {
       const info = await client.get<UserInfoResponse>('/v1/auth/info')
       if (info.session_mode) {
-        client.sessionMode = info.session_mode
+        client.setSessionMode(info.session_mode)
       }
       return info
     },
