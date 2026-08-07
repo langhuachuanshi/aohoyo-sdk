@@ -2,6 +2,18 @@
 
 本文件记录 sdk-js 的所有变更。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.6.0] - 2026-08-08
+
+### 新增
+
+- **feedback 模块**：`sdk.feedback` 支持反馈提交、图片上传、我的反馈列表
+  - `uploadImage(file)` —— 上传反馈图片（JWT 或 DeviceSign HMAC 双认证，multipart）
+  - `submit(params)` —— 提交反馈（JWT 或 DeviceSign HMAC，自动上传 File 对象）
+  - `myList(params)` —— 查询我的反馈列表（仅 JWT 登录用户）
+  - 新增类型 `FeedbackSubmitParams` / `FeedbackSubmitResponse` / `FeedbackItem` / `FeedbackMyListParams` / `FeedbackMyListResponse` / `UploadImageResponse`
+
+---
+
 ## [0.5.2] - 2026-07-01
 
 ### 变更
