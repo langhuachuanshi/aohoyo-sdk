@@ -16,6 +16,7 @@ export {
   type ImageCaptcha,
 } from './modules/captcha'
 export { createStorageModule, type StorageModule, type AvatarUploadResult } from './modules/storage'
+export { createFeedbackModule } from './modules/feedback'
 export * from './types'
 
 import { SdkClient, type SdkConfig } from './client'
@@ -29,6 +30,7 @@ import { createStatsModule } from './modules/stats'
 import { createCloudModule } from './modules/cloud'
 import { createCaptchaModule } from './modules/captcha'
 import { createStorageModule } from './modules/storage'
+import { createFeedbackModule } from './modules/feedback'
 
 /**
  * 创建 SDK 实例
@@ -91,6 +93,7 @@ export function createSdk(config: SdkConfig) {
     cloud: createCloudModule(client),
     captcha: createCaptchaModule(client),
     storage: createStorageModule(client),
+    feedback: createFeedbackModule(client),
   }
 }
 
