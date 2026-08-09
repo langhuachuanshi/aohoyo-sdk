@@ -125,7 +125,8 @@ sdk.stats.trackEvent('button_click', { button: 'buy' })
 | 函数 | 签名 | 说明 |
 |------|------|------|
 | `getUserInfo` | `() => Promise<UserInfoResponse>` | 获取当前用户信息（含角色/权限），每次请求不缓存 |
-| `updateProfile` | `(data: Record<string, any>) => Promise<void>` | 修改个人资料 |
+| `updateProfile` | `(data: Record<string, any>) => Promise<void>` | 修改个人资料（不含 username，请用 updateUsername） |
+| `updateUsername` | `(username: string) => Promise<void>` | 修改 username（独立端点，有冷却期和唯一性约束） |
 | `updatePassword` | `(params: { newPassword, oldPassword? }) => Promise<void>` | 修改密码，首次设置 oldPassword 可为空 |
 | `getPasswordPolicy` | `() => Promise<PasswordPolicy>` | 获取密码策略（公开接口），用于前端预校验 |
 | `sendProfileCode` | `(data: { scene, type, target, ... }) => Promise<void>` | 发送绑定/换绑验证码（需登录态） |

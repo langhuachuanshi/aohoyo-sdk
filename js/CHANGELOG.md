@@ -2,6 +2,15 @@
 
 本文件记录 sdk-js 的所有变更。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.7.0] - 2026-08-09
+
+### 新增
+
+- **user 模块新增 `updateUsername`**：`sdk.user.updateUsername(username)` 对应 `PUT /v1/profile/username`，独立于 `updateProfile`（username 有冷却期和唯一性约束，不能走通用资料修改）
+- **UserInfoResponse 新增字段**：`user.username_updated_at`（最近修改时间，从未改过则为 created_at）+ 顶层 `username_cooldown_days`（冷却天数），前端可通过 `getUserInfo()` 直接获取并判断是否允许修改
+
+---
+
 ## [0.6.0] - 2026-08-08
 
 ### 新增
@@ -36,27 +45,6 @@
   - `stats` 模块删除重复的 `parseOS`，复用 `client.deviceInfo.os_name`
   - `session` / `stats` 的 sendBeacon 拼接由脆弱的 `(client as any).http.defaults.baseURL` 改为公开的 `client.baseURL` getter（`SdkClient` 新增 `baseURL` 只读属性）
   - `auth` 模块抽取 `register` / `codeLogin` 共用的来源字段，消除重复的版本号格式化
-
----
-
-## [Unreleased]
-
-### 新增
-
-- **storage 模块接入 SDK**：`createSdk()` 返回新增 `sdk.storage`，客户端统一走 `sdk.storage.*`
-  - `uploadAvatar(file)` —— 封装 `POST /storage/avatar`（multipart），头像路径由服务端固定 `avatars/`，仅图片、≤2MB
-  - `SdkClient` 新增 `upload(url, formData)` 通用 multipart 上传方法
-  - 新增导出类型 `StorageModule` / `AvatarUploadResult`
-- **user 模块新增修改密码**：`sdk.user.updatePassword(oldPassword, newPassword)` —— 封装 `PUT /user/profile/password`（自助，校验原密码）
-- **user 模块新增「绑定/换绑 手机/邮箱」**：均需登录态，对应后端个人中心接口
-  - `sendProfileCode({scene, type, target, captcha_*?})` —— 封装 `POST /user/profile/code/send`（登录场景发码：bind_phone / change_phone / bind_email / change_email）
-  - `bindPhone({phone, code})` / `changePhone({phone, code})` —— 绑定 / 换绑手机
-  - `bindEmail({email, code})` / `changeEmail({email, code})` —— 绑定 / 换绑邮箱
-- **auth 注册/验证码登录补发来源字段**：`register` / `codeLogin` 顶层加发 `channel`（= `channel_code`）与 `app_version`（= `current_version_code`），供后端写入用户 `register_env` 的注册来源
-
-### 破坏性变更
-
-- 移除 `sdk.auth.changePassword(userId, password)`：该方法封装的是管理员重置（`PUT /users/:id/password`），本 SDK 面向第三方客户端、不含后台管理能力。找回密码仍用 `sdk.auth.resetPassword`（验证码）
 
 ---
 

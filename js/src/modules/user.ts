@@ -15,9 +15,18 @@ export function createUserModule(client: SdkClient) {
       return info
     },
 
-    /** 修改个人资料 */
+    /** 修改个人资料。
+     *  注意：username 不能通过此方法修改，请使用 updateUsername()。
+     *  username 有独立端点、冷却期和唯一性约束。 */
     updateProfile(data: Record<string, any>): Promise<void> {
       return client.put('/v1/profile/info', data)
+    },
+
+    /** 修改 username（独立端点，有冷却期和唯一性约束）。
+     *  与 updateProfile 分离：username 是登录凭证，修改后有冷却期，
+     *  后端返回冷却信息时 SDK 会将错误原样抛出，前端应展示友好提示。 */
+    updateUsername(username: string): Promise<void> {
+      return client.put('/v1/profile/username', { username })
     },
 
     /** 设置/修改密码。

@@ -17,12 +17,16 @@ export interface UserInfoResponse {
     updated_at: string
     /** 是否已设置登录密码（验证码注册用户首次为 false，设过密码后 true） */
     has_password: boolean
+    /** 最近一次修改 username 的时间（ISO 8601），从未改过则为 created_at */
+    username_updated_at: string
   }
   roles: { id: number; name: string }[]
   permissions: string[]
   app_ids: string[]
   /** 服务端下发的会话模式（SDK-3：覆盖本地默认值，刷新页面不回退） */
   session_mode: string
+  /** username 修改冷却天数（默认 30），前端据此判断是否允许修改 + 展示剩余天数 */
+  username_cooldown_days: number
 }
 
 /** 密码策略（GET /v1/auth/password/policy 返回） */
