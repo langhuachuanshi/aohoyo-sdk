@@ -17,8 +17,8 @@ export interface UserInfoResponse {
     updated_at: string
     /** 是否已设置登录密码（验证码注册用户首次为 false，设过密码后 true） */
     has_password: boolean
-    /** 最近一次修改 username 的时间（ISO 8601），从未改过则为 created_at */
-    username_updated_at: string
+    /** 最近一次修改 username 的时间（ISO 8601），从未改过则为 null（允许立即修改） */
+    username_updated_at: string | null
   }
   roles: { id: number; name: string }[]
   permissions: string[]

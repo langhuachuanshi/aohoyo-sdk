@@ -2,6 +2,14 @@
 
 本文件记录 sdk-js 的所有变更。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.7.1] - 2026-08-09
+
+### 修复
+
+- **`username_updated_at` 改为可空**：类型从 `string` 改为 `string \| null`，从未改过 username 时后端返回 `null`（而非回退为 `created_at`），新注册用户可立即修改 username
+
+---
+
 ## [0.7.0] - 2026-08-09
 
 ### 新增
