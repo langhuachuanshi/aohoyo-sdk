@@ -7,7 +7,7 @@ export function createUpgradeModule(client: SdkClient) {
   return {
     /** 检测是否需要升级 */
     checkUpgrade(): Promise<UpgradeCheckResponse> {
-      return client.post('/v1/upgrade/check', {
+      return client.post('/as/v1/upgrade/check', {
         app_id: client.appId,
         current_version_code: client.versionCode,
         platform: client.platform,
@@ -18,7 +18,7 @@ export function createUpgradeModule(client: SdkClient) {
 
     /** 获取升级策略（应用最新已发布版本） */
     getStrategy(): Promise<UpgradeStrategy | null> {
-      return client.get(`/app/upgrade/strategy/${client.appId}`)
+      return client.get(`/as/v1/upgrade/strategy/${client.appId}`)
     },
 
     /** 启动自动检查更新 */

@@ -30,12 +30,12 @@ export function createSessionModule(client: SdkClient) {
     }
     try {
       if (useBeacon) {
-        const url = `${client.baseURL}/v1/auth/track/end`
+        const url = `${client.baseURL}/uc/v1/auth/track/end`
         if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
           navigator.sendBeacon(url, JSON.stringify(payload))
         }
       } else {
-        await client.post('/v1/auth/track/end', payload)
+        await client.post('/uc/v1/auth/track/end', payload)
       }
     } catch {
       /* 静默失败，不影响退出 */
@@ -48,7 +48,7 @@ export function createSessionModule(client: SdkClient) {
   const scheduleNext = () => {
     timer = setTimeout(async () => {
       try {
-        await client.post('/v1/auth/heartbeat', { app_id: client.appId })
+        await client.post('/uc/v1/auth/heartbeat', { app_id: client.appId })
         scheduleNext()
       } catch {
         timer = null
@@ -58,7 +58,7 @@ export function createSessionModule(client: SdkClient) {
 
   function startHeartbeat() {
     stopHeartbeat()
-    client.post('/v1/auth/heartbeat', { app_id: client.appId })
+    client.post('/uc/v1/auth/heartbeat', { app_id: client.appId })
       .then(() => scheduleNext())
       .catch(() => { /* 401 已被 client 拦截器处理 */ })
   }

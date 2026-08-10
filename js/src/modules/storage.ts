@@ -31,7 +31,7 @@ export function createStorageModule(client: SdkClient) {
     uploadAvatar(file: File | Blob): Promise<AvatarUploadResult> {
       const form = new FormData()
       form.append('file', file)
-      return client.upload<AvatarUploadResult>('/v1/storage/avatar', form)
+      return client.upload<AvatarUploadResult>('/as/v1/storage/avatar', form)
     },
   }
 }

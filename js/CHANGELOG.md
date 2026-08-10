@@ -2,6 +2,28 @@
 
 本文件记录 sdk-js 的所有变更。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.8.0] - 2026-08-10
+
+### 破坏性变更（Breaking）
+
+- **路由前缀重构**: 对齐后端服务前缀架构，所有接口路径改为服务前缀 + 版本号
+  - UC 接口（auth/profile/menus/oauth/session）: `/v1/*` → `/uc/v1/*`
+  - AS 接口（captcha/device/feedback/storage/stats/upgrade）: `/v1/*` → `/as/v1/*`
+  - `baseURL` 不再需要带 `/api`，直接用域名或空即可
+- **删除 cloud 模块**: 云变量/云函数模块已下线（服务端路由早已移除），移除 `sdk.cloud` 及 `createCloudModule` 导出
+
+### 修复
+
+- **captcha create 路径缺前缀**: `/captcha/create` → `/as/v1/captcha/create`
+- **upgrade strategy 路径前缀错误**: `/app/upgrade/strategy/*` → `/as/v1/upgrade/strategy/*`
+
+### 升级指南
+
+```diff
+- const sdk = createSdk({ baseURL: '/api', app_id })
++ const sdk = createSdk({ baseURL: '', app_id })  // 或直接域名
+```
+
 ## [0.7.1] - 2026-08-09
 
 ### 修复

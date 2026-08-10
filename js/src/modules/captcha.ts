@@ -156,7 +156,7 @@ export function createCaptchaModule(client: SdkClient) {
      * 未配/非阿里云 → { mode:'image' }（改调 createImage）。
      */
     getConfig(scene: CaptchaScene): Promise<CaptchaConfig> {
-      return client.get<CaptchaConfig>('/v1/captcha/config', { scene })
+      return client.get<CaptchaConfig>('/as/v1/captcha/config', { scene })
     },
 
     /**
@@ -173,7 +173,7 @@ export function createCaptchaModule(client: SdkClient) {
       const query = new URLSearchParams()
       if (opts?.app_id) query.set('app_id', opts.app_id)
       const qs = query.toString() ? `?${query.toString()}` : ''
-      return client.post<ImageCaptcha>(`/captcha/create${qs}`, {
+      return client.post<ImageCaptcha>(`/as/v1/captcha/create${qs}`, {
         mode: opts?.mode,
         width: opts?.width,
         height: opts?.height,
@@ -192,7 +192,7 @@ export function createCaptchaModule(client: SdkClient) {
      * 请结合一次性 token / 业务态自行设计（见 docs/plans/captcha-image-provider.md 闭环讨论）。
      */
     verifyImage(captcha_id: string, code: string): Promise<void> {
-      return client.post('/v1/captcha/verify', { captcha_id, code })
+      return client.post('/as/v1/captcha/verify', { captcha_id, code })
     },
   }
 }

@@ -29,7 +29,7 @@ export function createAuthModule(client: SdkClient, opts?: AuthModuleOptions) {
     /** 用户登录（账号密码，自动附加 app_id 和设备信息） */
     async login(params: { username: string; password: string }): Promise<LoginResponse> {
       return afterLogin(
-        await client.post('/v1/auth/login', {
+        await client.post('/uc/v1/auth/login', {
           ...params,
           app_id: client.appId,
           device: client.deviceInfo,
@@ -46,7 +46,7 @@ export function createAuthModule(client: SdkClient, opts?: AuthModuleOptions) {
      */
     async register(params: Omit<RegisterParams, 'device' | 'app_id'>): Promise<LoginResponse> {
       return afterLogin(
-        await client.post('/v1/auth/register', {
+        await client.post('/uc/v1/auth/register', {
           ...params,
           ...sourceFields(),
           app_id: client.appId,
@@ -68,7 +68,7 @@ export function createAuthModule(client: SdkClient, opts?: AuthModuleOptions) {
       code: string
     }): Promise<LoginResponse> {
       return afterLogin(
-        await client.post('/v1/auth/login/code', {
+        await client.post('/uc/v1/auth/login/code', {
           ...params,
           ...sourceFields(),
           app_id: client.appId,
@@ -79,13 +79,13 @@ export function createAuthModule(client: SdkClient, opts?: AuthModuleOptions) {
 
     /** 退出登录 */
     async logout(): Promise<void> {
-      await client.post('/v1/auth/logout')
+      await client.post('/uc/v1/auth/logout')
       client.clearTokens()
     },
 
     /** 刷新 Token */
     async refreshToken(refresh_token: string): Promise<RefreshResponse> {
-      return client.post('/v1/auth/refresh', { refresh_token })
+      return client.post('/uc/v1/auth/refresh', { refresh_token })
     },
 
     /** 发送验证码（公开场景：注册 / 登录 / 找回密码）。需先完成服务商验证码（图形/行为），传入凭证 */
@@ -97,7 +97,7 @@ export function createAuthModule(client: SdkClient, opts?: AuthModuleOptions) {
       captcha_id?: string
       captcha_code?: string
     }): Promise<void> {
-      return client.post('/v1/auth/code/send', data)
+      return client.post('/uc/v1/auth/code/send', data)
     },
 
     /** 重置密码（未登录） */
@@ -107,7 +107,7 @@ export function createAuthModule(client: SdkClient, opts?: AuthModuleOptions) {
       code: string
       password: string
     }): Promise<void> {
-      return client.post('/v1/auth/password/reset', data)
+      return client.post('/uc/v1/auth/password/reset', data)
     },
 
     /**
@@ -120,12 +120,12 @@ export function createAuthModule(client: SdkClient, opts?: AuthModuleOptions) {
       target: string
       code: string
     }): Promise<void> {
-      return client.post('/v1/auth/code/verify', data)
+      return client.post('/uc/v1/auth/code/verify', data)
     },
 
     /** 校验邮箱验证链接 token（公开，验证落地页调用，成功后置 email_verified=1） */
     verifyEmail(token: string): Promise<void> {
-      return client.post('/v1/auth/email/verify', { token })
+      return client.post('/uc/v1/auth/email/verify', { token })
     },
   }
 }

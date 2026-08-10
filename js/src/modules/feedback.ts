@@ -66,7 +66,7 @@ export function createFeedbackModule(client: SdkClient) {
 
       if (client.isLoggedIn) {
         // JWT 模式：token 由 axios 拦截器自动注入
-        return client.upload<UploadImageResponse>('/v1/feedback/upload-image', formData)
+        return client.upload<UploadImageResponse>('/as/v1/feedback/upload-image', formData)
       }
 
       // DeviceSign 模式：构造签名头（multipart 不参与签名，仅验证设备身份）
@@ -77,7 +77,7 @@ export function createFeedbackModule(client: SdkClient) {
         '', // multipart 请求体不可预测，使用空串签名
       )
       return client.postWithHeaders<UploadImageResponse>(
-        '/v1/feedback/upload-image',
+        '/as/v1/feedback/upload-image',
         formData as any,
         headers,
       )
@@ -119,7 +119,7 @@ export function createFeedbackModule(client: SdkClient) {
       }
 
       if (client.isLoggedIn) {
-        return client.post<FeedbackSubmitResponse>('/v1/feedback', body)
+        return client.post<FeedbackSubmitResponse>('/as/v1/feedback', body)
       }
 
       const headers = await buildSignHeaders(
@@ -128,7 +128,7 @@ export function createFeedbackModule(client: SdkClient) {
         requireSecret(),
         JSON.stringify(body),
       )
-      return client.postWithHeaders<FeedbackSubmitResponse>('/v1/feedback', body, headers)
+      return client.postWithHeaders<FeedbackSubmitResponse>('/as/v1/feedback', body, headers)
     },
 
     /**
@@ -138,7 +138,7 @@ export function createFeedbackModule(client: SdkClient) {
       if (!client.isLoggedIn) {
         throw new Error('myList requires login (JWT token)')
       }
-      return client.get<FeedbackMyListResponse>('/v1/feedback/my', {
+      return client.get<FeedbackMyListResponse>('/as/v1/feedback/my', {
         page: params?.page || 1,
         page_size: params?.page_size || 10,
         app_id: params?.app_id,

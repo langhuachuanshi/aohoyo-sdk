@@ -70,7 +70,7 @@ export function createStatsModule(client: SdkClient, config?: StatsConfig) {
     if (!queue.length) return
     const batch = queue.splice(0, batchSize)
     try {
-      await client.post('/v1/stats/events', { events: batch })
+      await client.post('/as/v1/stats/events', { events: batch })
     } catch {
       // 静默失败，不影响业务
     }
@@ -82,7 +82,7 @@ export function createStatsModule(client: SdkClient, config?: StatsConfig) {
     const batch = queue.splice(0, batchSize)
     try {
       const payload = JSON.stringify({ events: batch })
-      const url = `${client.baseURL}/v1/stats/events`
+      const url = `${client.baseURL}/as/v1/stats/events`
       if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
         navigator.sendBeacon(url, payload)
       }

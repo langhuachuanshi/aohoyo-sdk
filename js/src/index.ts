@@ -7,7 +7,6 @@ export { createDeviceModule } from './modules/device'
 export { createSessionModule } from './modules/session'
 export { createOAuthModule } from './modules/oauth'
 export { createStatsModule } from './modules/stats'
-export { createCloudModule } from './modules/cloud'
 export {
   createCaptchaModule,
   type CaptchaModule,
@@ -27,7 +26,6 @@ import { createDeviceModule } from './modules/device'
 import { createSessionModule } from './modules/session'
 import { createOAuthModule } from './modules/oauth'
 import { createStatsModule } from './modules/stats'
-import { createCloudModule } from './modules/cloud'
 import { createCaptchaModule } from './modules/captcha'
 import { createStorageModule } from './modules/storage'
 import { createFeedbackModule } from './modules/feedback'
@@ -41,7 +39,7 @@ import { createFeedbackModule } from './modules/feedback'
  * @example
  * ```ts
  * const sdk = createSdk({
- *   baseURL: '/api',
+ *   baseURL: '',
  *   app_id,
  *   onTokenExpired: () => router.push('/login'),
  * })
@@ -90,7 +88,6 @@ export function createSdk(config: SdkConfig) {
     session,
     oauth: createOAuthModule(client),
     stats,
-    cloud: createCloudModule(client),
     captcha: createCaptchaModule(client),
     storage: createStorageModule(client),
     feedback: createFeedbackModule(client),

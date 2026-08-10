@@ -218,7 +218,7 @@ export class SdkClient {
     if (!refresh) return Promise.resolve(null)
 
     this.refreshing = axios
-      .post(`${this.config.baseURL}/v1/auth/refresh`, { refresh_token: refresh })
+      .post(`${this.config.baseURL}/uc/v1/auth/refresh`, { refresh_token: refresh })
       .then((res) => {
         const { access_token, refresh_token } = res.data?.data ?? res.data
         if (access_token) {
