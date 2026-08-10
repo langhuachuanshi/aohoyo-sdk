@@ -2,6 +2,16 @@
 
 本文件记录 sdk/server-go 的所有变更。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.10.0] - 2026-08-10
+
+### 破坏性变更（Breaking）
+
+- **路由前缀重构**: 对齐后端服务前缀架构
+  - s2s 存储: `/v1/storage/*` → `/as/v1/storage/*`
+  - stats 统计: `/v1/stats/events` → `/as/v1/stats/events`
+  - uc 用户校验: `/v1/auth/verify`、`/v1/users` → `/uc/v1/auth/verify`、`/uc/v1/users`
+- `BaseURL` 不再需要带 `/api`，直接用域名即可
+
 ## [0.9.0] - 2026-07-20
 
 ### 修复

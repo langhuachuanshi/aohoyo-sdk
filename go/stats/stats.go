@@ -1,6 +1,6 @@
 // Package stats 提供 aohoyo admin-server 统计事件上报客户端。
 //
-// 对应 AS 的公开接口 POST /api/v1/stats/events（无需鉴权，仅限流 60/min）。
+// 对应 AS 的公开接口 POST /as/v1/stats/events（无需鉴权，仅限流 60/min）。
 // 自 v0.8.0 起 BaseURL 指向 /api 路由组根（同 s2s 包），本包只拼 /stats/events，
 // 不再含 /api 前缀，避免经反代时出现 /api/api/stats/... 双前缀 404。
 // 与 sdk/client-js 的 stats 模块对接同一个后端接口，字段定义完全一致。
@@ -50,7 +50,7 @@ const (
 	// defaultTimeout 短请求的 context 超时（v0.9.0 起 HTTPClient.Timeout=0，由方法内部 context 管）。
 	defaultTimeout = 10 * time.Second
 	maxBatchSize   = 50 // 与服务端 StatsEventBatch 的 max=50 一致
-	endpointEvents = "/v1/stats/events"
+	endpointEvents = "/as/v1/stats/events"
 )
 
 // Event 单条统计事件，字段与服务端 model.StatsEventReport 完全对齐。

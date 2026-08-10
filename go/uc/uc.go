@@ -37,8 +37,8 @@ const (
 	defaultTimeout = 30 * time.Second
 
 	// 端点路径（BaseURL 指向 /api 路由组根）
-	endpointVerify = "/v1/auth/verify"
-	endpointUsers  = "/v1/users"
+	endpointVerify = "/uc/v1/auth/verify"
+	endpointUsers  = "/uc/v1/users"
 
 	// 搜索兜底分页大小
 	searchPageSize = 20
@@ -111,7 +111,7 @@ type ucResp struct {
 
 // VerifyToken 验证 Bearer token 有效性，返回用户身份与权限信息。
 //
-// 对应 UC 接口：POST /api/v1/auth/verify（JWT 鉴权）
+// 对应 UC 接口：POST /uc/v1/auth/verify（JWT 鉴权）
 //
 // 用途：接入方的 admin 鉴权中间件。每次 /admin 请求到来时，
 // 把前端传来的 Bearer token 透传给 UC 验证，拿到 user_id / username /
@@ -143,7 +143,7 @@ func (c *Client) VerifyToken(ctx context.Context, token string) (*UserIdentity, 
 
 // ListUsers 分页查询用户列表。
 //
-// 对应 UC 接口：GET /api/v1/users（JWT + user:list 权限）
+// 对应 UC 接口：GET /uc/v1/users（JWT + user:list 权限）
 //
 // 用途：admin 后台把 user_id 列表翻译成可读的 username。
 // token 需要有 user:list 权限（通常用 admin 服务账号的 token）。
@@ -203,7 +203,7 @@ func (c *Client) ListUsers(ctx context.Context, token string, opts ListUsersOpti
 // 搜索策略：先按 username 查，无结果再按 phone 查（兜底）。
 // 这是 090cq admin_yuanbao.go SearchUsers 的逻辑封装到 SDK。
 //
-// 对应 UC 接口：GET /api/v1/users?username=<kw> 和 /api/v1/users?phone=<kw>
+// 对应 UC 接口：GET /uc/v1/users?username=<kw> 和 /uc/v1/users?phone=<kw>
 func (c *Client) SearchUsers(ctx context.Context, token string, keyword string) ([]User, error) {
 	if keyword == "" {
 		return nil, fmt.Errorf("搜索关键词不能为空")

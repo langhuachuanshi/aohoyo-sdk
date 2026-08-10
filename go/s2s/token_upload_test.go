@@ -43,7 +43,7 @@ func mockQiniuEnv(t *testing.T, directMode bool) (string, string) {
 
 	// AS 凭证接口
 	asSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/v1/storage/upload-token" {
+		if r.URL.Path == "/as/v1/storage/upload-token" {
 			// 读 body 拿 filename + 可选 key
 			raw, _ := io.ReadAll(r.Body)
 			var req struct {
@@ -93,7 +93,7 @@ func mockQiniuEnv(t *testing.T, directMode bool) (string, string) {
 		}
 
 		// /storage/upload 代理上传（proxy 模式回退用）
-		if r.URL.Path == "/v1/storage/upload" {
+		if r.URL.Path == "/as/v1/storage/upload" {
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]any{
 				"code":    200,

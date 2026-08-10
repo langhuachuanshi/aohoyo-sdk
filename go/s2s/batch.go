@@ -237,7 +237,7 @@ func (c *Client) uploadSingle(ctx context.Context, item UploadItem) (string, err
 
 		// 每次重新签名（timestamp 变了，签名必须重算）
 		req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-			c.BaseURL+"/v1/storage/upload", bytes.NewReader(bodyBytes))
+			c.BaseURL+"/as/v1/storage/upload", bytes.NewReader(bodyBytes))
 		if err != nil {
 			return "", err
 		}

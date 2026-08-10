@@ -165,7 +165,7 @@ func (c *Client) Upload(ctx context.Context, pathPrefix, fileName string, data [
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		c.BaseURL+"/v1/storage/upload", bytes.NewReader(body.Bytes()))
+		c.BaseURL+"/as/v1/storage/upload", bytes.NewReader(body.Bytes()))
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +228,7 @@ func (c *Client) GetUploadToken(ctx context.Context, pathPrefix, fileName, objec
 	reqBody, _ := json.Marshal(payload)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		c.BaseURL+"/v1/storage/upload-token", bytes.NewReader(reqBody))
+		c.BaseURL+"/as/v1/storage/upload-token", bytes.NewReader(reqBody))
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +257,7 @@ func (c *Client) Delete(ctx context.Context, paths []string) error {
 	reqBody, _ := json.Marshal(map[string][]string{"paths": paths})
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		c.BaseURL+"/v1/storage/delete", bytes.NewReader(reqBody))
+		c.BaseURL+"/as/v1/storage/delete", bytes.NewReader(reqBody))
 	if err != nil {
 		return err
 	}
