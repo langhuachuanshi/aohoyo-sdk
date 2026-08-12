@@ -2,6 +2,15 @@
 
 本文件记录 sdk/server-go 的所有变更。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [Unreleased]
+
+### 新增
+
+- **desktop-native（`go/native/`）**: 桌面端原生安全模块（Wails 可绑定）——
+  机器指纹（Windows MachineGuid+MAC / Unix machine-id）、风险检测（debug/emulator/root/hook/multiopen，威慑层）、
+  DeviceSign 签名 + nonce、升级清单校验、exe 完整性、防多开互斥、DPAPI/0600 安全存储、证书固定 pin。
+  零三方依赖（仅标准库 + syscall）。
+
 ## [0.10.0] - 2026-08-10
 
 ### 破坏性变更（Breaking）
