@@ -160,7 +160,7 @@ sdk.stats.trackEvent('button_click', { button: 'buy' })
 
 | 函数 | 签名 | 说明 |
 |------|------|------|
-| `report` | `(params?: { user_id?: number }) => Promise<void>` | 设备上报，使用 HMAC-SHA256 签名（需要 app_secret）。risk_flags 优先取桌面原生桥 `DetectRisks()`（映射服务端枚举、按安全策略裁剪），纯浏览器为 `[]`；策略 `risk_policy=block` 且有风险时上报后触发 `onRiskBlocked` 回调 |
+| `report` | `(params?: { user_id?: number }) => Promise<void>` | 设备上报，使用 HMAC-SHA256 签名（需要 app_secret）。risk_flags 优先取桌面原生桥 `DetectRisks()`（Wails）/ `detect_risks()`（Tauri）命名兼容探测，映射服务端枚举、按安全策略裁剪，纯浏览器为 `[]`；策略 `risk_policy=block` 且有风险时上报后触发 `onRiskBlocked` 回调 |
 | `verify` | `() => Promise<DeviceVerifyResponse>` | 设备验证，同样需要签名 |
 | `detectRisks` | `() => Promise<RiskFlag[]>` | 桌面端风险检测（原生桥 → 枚举映射 → 策略裁剪），桥缺失静默返回 `[]` |
 | `getSecurityConfig` | `(force?: boolean) => Promise<SecurityConfig \| null>` | 拉取桌面端安全策略（DeviceSign），首次 report 前自动拉取并缓存，失败返回 null 按默认策略降级 |

@@ -46,15 +46,23 @@ async function buildSignHeaders(
 const RISK_FLAG_ENUM: ReadonlySet<string> = new Set(['debug', 'emulator', 'multiopen', 'root', 'hook'])
 
 /**
- * 从桌面原生桥检测风险（window.__AOHOYO_NATIVE__.DetectRisks，go/native 暴露给 Wails 前端的绑定）。
- * 能力探测：桥缺失或未提供 DetectRisks 时静默降级为空数组（纯浏览器无检测能力，属预期），
+ * 从桌面原生桥检测风险（window.__AOHOYO_NATIVE__，Wails/Tauri 宿主注入）。
+ * 命名兼容：Wails 绑定 Go 方法为 PascalCase（DetectRisks），Tauri 绑定 Rust 方法为
+ * snake_case（detect_risks），命中任一即调用；两者返回结构均为 { flags: string[] }。
+ * 能力探测：桥缺失或未提供任一方法时静默降级为空数组（纯浏览器无检测能力，属预期），
  * 任何异常不得抛出影响 device.report 主流程。
  */
 async function detectNativeRisks(): Promise<string[]> {
   try {
     const bridge = (typeof window !== 'undefined' ? (window as any).__AOHOYO_NATIVE__ : undefined)
-    if (typeof bridge?.DetectRisks !== 'function') return []
-    const res = await bridge.DetectRisks()
+    if (!bridge) return []
+    const detect = typeof bridge.DetectRisks === 'function'
+      ? bridge.DetectRisks
+      : typeof bridge.detect_risks === 'function'
+        ? bridge.detect_risks
+        : null
+    if (!detect) return []
+    const res = await detect.call(bridge)
     const flags: unknown = res?.flags
     if (!Array.isArray(flags)) return []
     return flags.filter((f): f is string => typeof f === 'string')
@@ -125,7 +133,8 @@ export function createDeviceModule(client: SdkClient) {
   return {
     /**
      * 设备上报（使用初始化时缓存的设备信息）。
-     * SEC-1：risk_flags 优先取桌面原生桥 DetectRisks 结果（映射服务端枚举、按策略开关裁剪），
+     * SEC-1：risk_flags 优先取桌面原生桥风险检测结果（DetectRisks / detect_risks 命名兼容，
+     * 映射服务端枚举、按策略开关裁剪），
      * 纯浏览器环境为空数组。若策略 risk_policy=block 且检测到风险，上报完成后触发
      * onRiskBlocked 回调（由宿主应用决定阻断 UI），上报本身不中断。
      */

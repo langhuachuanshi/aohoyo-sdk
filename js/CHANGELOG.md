@@ -25,6 +25,9 @@
   目标应用启用旧号验证时缺 old_code 会收到「请先验证当前手机号/邮箱」）
 - **risk_flags 放行 debug 枚举**: 服务端 `risk.Analyze` 新增 RiskDebug=6，
   原生桥检测到的调试器风险随 devices/report 上报落库；anti_debug 策略关闭则不上报
+- **原生桥 Tauri 命名兼容**: 桥探测同时认 `DetectRisks`（Wails/Go，PascalCase）与
+  `detect_risks`（Tauri/Rust，snake_case），命中任一即调用——修复 Tauri 应用正确集成
+  rust crate 后 risk_flags 仍为空数组的静默失效；两者返回结构均为 `{ flags }`，无字段差异
 
 ### 变更
 
