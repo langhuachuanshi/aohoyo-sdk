@@ -2,13 +2,13 @@
 
 本文件记录 sdk-js 的所有变更。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
-## [Unreleased]
+## [0.9.0] - 2026-09-03
 
 ### 新增
 
 - **device 模块风险检测接线（SEC-1）**：`device.report` 的 `risk_flags` 优先取桌面原生桥
-  `window.__AOHOYO_NATIVE__.DetectRisks()` 结果（映射服务端枚举 emulator/multiopen/root/hook，
-  `debug` 不在枚举内被丢弃），纯浏览器环境保持空数组，桥缺失/调用失败静默降级不影响主流程
+  `window.__AOHOYO_NATIVE__.DetectRisks()` 结果（映射服务端枚举 debug/emulator/multiopen/root/hook），
+  纯浏览器环境保持空数组，桥缺失/调用失败静默降级不影响主流程
 - **安全策略下发消费（SEC-1）**：新增 `sdk.device.getSecurityConfig()`（POST /as/v1/app/security/config，
   DeviceSign 鉴权），首次 report 前自动拉取一次并缓存；检测项按策略开关裁剪（如 emulator_detect=false
   则该项不上报、不参与阻断判定）；`risk_policy=block` 且检测到风险时上报完成后触发
@@ -23,6 +23,8 @@
 - **换绑两步验证类型（UC-17 配套）**: `changePhone` / `changeEmail` 参数补可选 `old_code`
   （先向当前号/邮箱发码拿到 old_code，再向新号发码，提交时带 old_code + code；
   目标应用启用旧号验证时缺 old_code 会收到「请先验证当前手机号/邮箱」）
+- **risk_flags 放行 debug 枚举**: 服务端 `risk.Analyze` 新增 RiskDebug=6，
+  原生桥检测到的调试器风险随 devices/report 上报落库；anti_debug 策略关闭则不上报
 
 ### 变更
 
