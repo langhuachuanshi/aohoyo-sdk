@@ -47,8 +47,9 @@ const { sign, timestamp, nonce } = await native.SignRequest(deviceId, body)
 - `VerifyUpgrade(manifestJSON, signature)`：`manifestJSON` 为升级接口响应 `data` 去掉 `signature` 字段后的 JSON 字符串。
 - 风险检测为**威慑层**：可被 patch 绕过，服务端不得仅凭 `risk_flags` 做封禁级决策（见主仓库 `docs/plans/desktop-security-solution.md`）。
 - `ReportDeviceWithRisks` 的 risk_flags 只上报服务端 `risk.Analyze` 接受的枚举
-  （emulator/multiopen/root/hook），`DetectRisks` 的 `debug` 不在枚举内会被丢弃；
-  策略拉取失败不阻断上报，`risk_policy=block` 且有风险时返回 `*RiskBlockedError`
+  （debug/emulator/multiopen/root/hook，debug 对应 RiskDebug=6）；检测项按安全策略开关裁剪
+  （anti_debug=false 等则不上报该项）；策略拉取失败不阻断上报，
+  `risk_policy=block` 且有风险时返回 `*RiskBlockedError`
   （上报已完成，宿主 `errors.As` 捕获后自行决定阻断 UI）。
 
 ## 平台说明

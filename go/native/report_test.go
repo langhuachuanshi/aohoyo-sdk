@@ -51,7 +51,7 @@ func securityConfigResponse(riskPolicy string, emulatorDetect bool) string {
 
 func TestMapRiskFlagsToReport(t *testing.T) {
 	got := mapRiskFlagsToReport([]string{"debug", "emulator", "multiopen", "root", "hook", "sign", "unknown"})
-	want := []string{"emulator", "multiopen", "root", "hook"}
+	want := []string{"debug", "emulator", "multiopen", "root", "hook"}
 	if len(got) != len(want) {
 		t.Fatalf("枚举映射结果 %v，期望 %v", got, want)
 	}
@@ -66,17 +66,17 @@ func TestMapRiskFlagsToReport(t *testing.T) {
 }
 
 func TestPruneRiskFlags(t *testing.T) {
-	flags := []string{"emulator", "root", "hook", "multiopen"}
+	flags := []string{"debug", "emulator", "root", "hook", "multiopen"}
 
 	var nilCfg *SecurityConfig
 	if got := nilCfg.PruneRiskFlags(flags); len(got) != len(flags) {
 		t.Error("nil 策略不应裁剪")
 	}
 
-	cfg := &SecurityConfig{EmulatorDetect: false, AntiMultiOpen: true, RootDetect: true, HookDetect: true}
+	cfg := &SecurityConfig{AntiDebug: false, EmulatorDetect: false, AntiMultiOpen: true, RootDetect: true, HookDetect: true}
 	got := cfg.PruneRiskFlags(flags)
-	if len(got) != 3 || contains(got, "emulator") {
-		t.Errorf("emulator_detect=false 应丢弃 emulator，实际 %v", got)
+	if len(got) != 3 || contains(got, "emulator") || contains(got, "debug") {
+		t.Errorf("anti_debug/emulator_detect=false 应丢弃 debug/emulator，实际 %v", got)
 	}
 }
 
@@ -168,14 +168,14 @@ func TestReportDeviceWithRisksSignature(t *testing.T) {
 	if req.AppID != "app_test" || req.DeviceID != "dev_001" {
 		t.Errorf("app_id/device_id 错误: %+v", req)
 	}
-	// debug 不在服务端枚举内应被丢弃；策略拉取失败不裁剪
-	if len(req.RiskFlags) != 1 || req.RiskFlags[0] != "emulator" {
-		t.Errorf("risk_flags 期望 [emulator]，实际 %v", req.RiskFlags)
+	// debug/emulator 均在服务端枚举内应保留（保持检测输出顺序）；策略拉取失败不裁剪
+	if len(req.RiskFlags) != 2 || req.RiskFlags[0] != "emulator" || req.RiskFlags[1] != "debug" {
+		t.Errorf("risk_flags 期望 [emulator debug]，实际 %v", req.RiskFlags)
 	}
 }
 
 func TestReportDeviceWithRisksBlockPolicy(t *testing.T) {
-	stubDetectRisks(t, []string{"emulator", "hook"})
+	stubDetectRisks(t, []string{"debug", "emulator", "hook"})
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == endpointSecurityConfig {
@@ -192,11 +192,11 @@ func TestReportDeviceWithRisksBlockPolicy(t *testing.T) {
 	if !errors.As(err, &blocked) {
 		t.Fatalf("block 策略 + 有风险应返回 RiskBlockedError，实际: %v", err)
 	}
-	if len(blocked.Flags) != 2 {
-		t.Errorf("阻断 flags 期望 [emulator hook]，实际 %v", blocked.Flags)
+	if len(blocked.Flags) != 3 {
+		t.Errorf("阻断 flags 期望 [debug emulator hook]，实际 %v", blocked.Flags)
 	}
-	if !strings.Contains(blocked.Error(), "emulator") {
-		t.Errorf("错误信息应包含风险项: %s", blocked.Error())
+	if !strings.Contains(blocked.Error(), "debug") {
+		t.Errorf("错误信息应包含风险项 debug: %s", blocked.Error())
 	}
 }
 

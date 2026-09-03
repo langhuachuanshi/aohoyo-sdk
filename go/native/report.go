@@ -20,9 +20,10 @@ const (
 	reportTimeout = 10 * time.Second
 )
 
-// reportableRiskFlags 服务端 risk.Analyze 接受的 risk_flags 枚举。
-// DetectRisks 的 debug 不在枚举内（服务端不落库），上报前丢弃。
+// reportableRiskFlags 服务端 risk.Analyze 接受的 risk_flags 枚举
+// （debug 对应 RiskDebug=6，主仓库 022c5a4 起支持）。
 var reportableRiskFlags = map[string]bool{
+	"debug":    true,
 	"emulator": true,
 	"multiopen": true,
 	"root":     true,
@@ -81,7 +82,8 @@ type SecurityConfig struct {
 	ConfigJSON       string `json:"config_json"`
 }
 
-// PruneRiskFlags 按策略开关裁剪检测项（如 emulator_detect=false 则丢弃 emulator）。
+// PruneRiskFlags 按策略开关裁剪检测项（如 emulator_detect=false 则丢弃 emulator；
+// anti_debug=false 则丢弃 debug）。
 // nil 接收者直接原样返回（策略拉取失败时不裁剪）。
 func (c *SecurityConfig) PruneRiskFlags(flags []string) []string {
 	if c == nil {
@@ -91,6 +93,8 @@ func (c *SecurityConfig) PruneRiskFlags(flags []string) []string {
 	for _, f := range flags {
 		var enabled bool
 		switch f {
+		case "debug":
+			enabled = c.AntiDebug
 		case "emulator":
 			enabled = c.EmulatorDetect
 		case "root":
@@ -198,8 +202,8 @@ func (n *Native) GetSecurityConfig(ctx context.Context, deviceID string) (*Secur
 
 // ReportDeviceWithRisks 检测运行环境风险并上报设备（POST /as/v1/devices/report，DeviceSign 签名）。
 //
-// 流程：DetectRisks → 枚举映射（debug 等服务端不接受的值丢弃）→ 尽力拉取安全策略
-// 裁剪检测项（策略拉取失败不阻断上报，按未裁剪 flags 上报）→ 签名上报。
+// 流程：DetectRisks → 枚举映射（debug/emulator/multiopen/root/hook，服务端不接受的值丢弃）→
+// 尽力拉取安全策略裁剪检测项（策略拉取失败不阻断上报，按未裁剪 flags 上报）→ 签名上报。
 // 网络/服务端失败返回 error，调用方仅记日志即可，不应据此阻断业务流程。
 // 若策略 risk_policy=block 且裁剪后仍有风险，上报完成后返回 *RiskBlockedError，
 // 宿主应用可 errors.As 识别并展示阻断 UI（SDK 不自行中断）。
