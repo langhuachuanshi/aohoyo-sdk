@@ -10,6 +10,7 @@ package native
 import (
 	"encoding/hex"
 	"fmt"
+	"net/http"
 	"sync"
 )
 
@@ -21,6 +22,7 @@ type Native struct {
 	AppSecret string
 	BaseURL   string
 	certPin   string
+	httpc     *http.Client
 }
 
 // New 创建原生模块实例。appSecret 仅存于原生层，绝不外泄给 JS。

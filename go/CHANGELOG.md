@@ -10,6 +10,11 @@
   机器指纹（Windows MachineGuid+MAC / Unix machine-id）、风险检测（debug/emulator/root/hook/multiopen，威慑层）、
   DeviceSign 签名 + nonce、升级清单校验、exe 完整性、防多开互斥、DPAPI/0600 安全存储、证书固定 pin。
   零三方依赖（仅标准库 + syscall）。
+- **native 风险上报接线（SEC-1）**: 新增 `ReportDeviceWithRisks`（DetectRisks → 服务端枚举映射
+  （debug 丢弃）→ 尽力拉取安全策略裁剪检测项 → DeviceSign 签名上报 devices/report；
+  `risk_policy=block` 且有风险时上报完成后返回 `*RiskBlockedError` 供宿主中断启动）
+  与 `GetSecurityConfig`（拉取 /as/v1/app/security/config 桌面端安全策略），均带单测
+  （枚举映射、签名复算、策略裁剪、block 信号、策略拉取失败降级）。
 
 ## [0.10.0] - 2026-08-10
 

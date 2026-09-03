@@ -15,6 +15,8 @@
 | `AcquireMutex` | 防多开互斥（Windows Global Mutex / Unix flock） | anti_multi_open |
 | `SecureGet/Set` | Windows DPAPI / Unix 0600 文件 | refresh_token / 离线凭证 / 激活码存储 |
 | `SetCertPin/GetCertPin` | TLS 证书固定 pin 存取 | cert_pin |
+| `GetSecurityConfig` | 拉取桌面端安全策略（DeviceSign 鉴权） | risk_policy + 各检测项开关 |
+| `ReportDeviceWithRisks` | 检测风险并上报设备（devices/report，flags 映射服务端枚举、按策略裁剪） | SEC-1 全流程 |
 
 ## 使用（Wails 集成）
 
@@ -44,6 +46,10 @@ const { sign, timestamp, nonce } = await native.SignRequest(deviceId, body)
   `HMAC-SHA256(app_secret, deviceID + "\n" + timestamp + "\n" + body)` 复算（与 AS `pkg/sign` 同构）。
 - `VerifyUpgrade(manifestJSON, signature)`：`manifestJSON` 为升级接口响应 `data` 去掉 `signature` 字段后的 JSON 字符串。
 - 风险检测为**威慑层**：可被 patch 绕过，服务端不得仅凭 `risk_flags` 做封禁级决策（见主仓库 `docs/plans/desktop-security-solution.md`）。
+- `ReportDeviceWithRisks` 的 risk_flags 只上报服务端 `risk.Analyze` 接受的枚举
+  （emulator/multiopen/root/hook），`DetectRisks` 的 `debug` 不在枚举内会被丢弃；
+  策略拉取失败不阻断上报，`risk_policy=block` 且有风险时返回 `*RiskBlockedError`
+  （上报已完成，宿主 `errors.As` 捕获后自行决定阻断 UI）。
 
 ## 平台说明
 
