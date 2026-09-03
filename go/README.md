@@ -8,14 +8,10 @@ Aohoyo 服务端 Go SDK，给外部 Go 后端服务（如 wilas）集成。封�
 ## 安装
 
 ```bash
-go get github.com/aohoyo/sdk-go
+go get github.com/langhuachuanshi/aohoyo-sdk/go
 ```
 
-> sdk-go 目前在 aohoyo 仓库内（`sdk/server-go/`），未单独发布到 GitHub 公开仓库。
-> 外部项目可用 replace 指向本地路径或仓库内引用：
-> ```go
-> replace github.com/aohoyo/sdk-go => /path/to/aohoyo/sdk/server-go
-> ```
+> 版本走本仓库 `go/v*` tag（当前主线 v1.x），Go proxy 按 semver 自动解析。
 
 ## 模块
 
@@ -24,10 +20,12 @@ go get github.com/aohoyo/sdk-go
 | 根包 `aohoyo` | **统一入口**（推荐）：一次初始化拿全部能力 | — |
 | [`s2s`](./s2s/) | S2S 签名 + 对外存储接口客户端（Upload / GetUploadToken / Delete） | app_secret 签名 |
 | [`stats`](./stats/) | 统计事件上报（ReportEvents / ReportEvent） | 公开接口，无需签名 |
+| [`uc`](./uc/) | 用户中心 Token 验证 / 用户查询（VerifyToken / ListUsers / SearchUsers） | Bearer token 透传 |
+| [`native`](./native/) | 桌面端原生安全模块（Wails 可绑定）：机器指纹、风险检测、DeviceSign 签名、`ReportDeviceWithRisks` 风险上报、`GetSecurityConfig` 策略拉取、DPAPI 安全存储、防多开 | app_secret 仅存原生层 |
 
 ## 快速开始（统一入口，推荐）
 
-一次初始化，所有能力挂在 `c.S2S` / `c.Stats` 上：
+一次初始化，所有能力挂在 `c.S2S` / `c.Stats` / `c.UC` 上：
 
 ```go
 package main
@@ -37,15 +35,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/aohoyo/sdk-go"       // 统一入口
-	"github.com/aohoyo/sdk-go/stats" // 事件类型常量
+	aohoyo "github.com/langhuachuanshi/aohoyo-sdk/go"       // 统一入口
+	"github.com/langhuachuanshi/aohoyo-sdk/go/stats"        // 事件类型常量
 )
 
 func main() {
 	c, err := aohoyo.New(
 		os.Getenv("AOHOYO_APP_ID"),
 		os.Getenv("AOHOYO_APP_SECRET"),
-		"https://api.aohoyo.com",
+		"https://api.aohoyo.com", // 域名根，SDK 内部拼 /as/v1/*、/uc/v1/*
 	)
 	if err != nil { panic(err) }
 
@@ -72,7 +70,7 @@ func main() {
 如果只用到单一能力，可直接用子包：
 
 ```go
-import "github.com/aohoyo/sdk-go/s2s"
+import "github.com/langhuachuanshi/aohoyo-sdk/go/s2s"
 
 c := s2s.New(appID, appSecret, baseURL)
 c.Upload(ctx, "files/", "test.zip", data)
@@ -80,7 +78,7 @@ c.Upload(ctx, "files/", "test.zip", data)
 
 ## 签名协议
 
-与 AS 的 DeviceSign 同构（`deviceID` 换成 `appID`），详见 [S2S 签名 Spec](../../docs/specs/s2s-sign.md)。
+与 AS 的 DeviceSign 同构（`deviceID` 换成 `appID`），详见主仓库 [`docs/specs/s2s-sign.md`](https://github.com/langhuachuanshi/aohoyo)。
 
 ```
 signData  = appID + "\n" + timestamp + "\n" + body
