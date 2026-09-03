@@ -14,6 +14,12 @@
   则该项不上报、不参与阻断判定）；`risk_policy=block` 且检测到风险时上报完成后触发
   `SdkConfig.onRiskBlocked` 回调（可中断信号，由宿主应用决定阻断 UI）；新增 `sdk.device.detectRisks()`
 - **新增类型**：`RiskFlag`、`SecurityConfig`（types/device.ts，统一导出）
+- **事件补 app_version（AW-2）**: stats 事件统一携带 `app_version`（取 SDK 初始化的版本号，
+  与 device.report 取值对齐）；服务端 stats_events 加列前多出的字段被静默忽略，加列后自然生效
+- **session_end 周期 checkpoint（AW-2）**: 会话进行中每 60s 发一条覆盖式 `session_end`
+  （同一 session_id、duration=自会话起的累计秒数，后到更大值覆盖先到的），兜底移动端/崩溃/杀进程
+  导致的 beforeunload 丢失；页面隐藏时立即落一条 checkpoint、重新可见时对齐周期；
+  同一时刻仅一条在途 checkpoint（防 duration 重复计入）；`StatsConfig.checkpointInterval` 可配（0=关闭）
 
 ## [0.8.0] - 2026-08-10
 

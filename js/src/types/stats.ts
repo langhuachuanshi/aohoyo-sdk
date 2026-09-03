@@ -9,6 +9,8 @@ export interface StatsEvent {
   session_id?: string
   platform?: string
   device_id?: string
+  /** 应用版本号（与 device.report 的 app_version 取值对齐；服务端加列前静默忽略） */
+  app_version?: string
   os?: string
   browser?: string
   screen_w?: number
@@ -31,4 +33,10 @@ export interface StatsConfig {
   batchSize?: number
   /** 是否自动采集 JS 错误，默认 true */
   autoError?: boolean
+  /**
+   * session_end 覆盖式 checkpoint 周期（毫秒），默认 60000。
+   * 会话进行中周期性上报累计时长（同一 session_id，后到更大值覆盖先到的），
+   * 兜底移动端/崩溃/杀进程导致的 session_end 丢失；0 = 关闭。
+   */
+  checkpointInterval?: number
 }

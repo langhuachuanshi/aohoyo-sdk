@@ -20,10 +20,15 @@ export function createStatsModule(client: SdkClient, config?: StatsConfig) {
   const reportInterval = config?.reportInterval ?? 10000
   const batchSize = config?.batchSize ?? 50
   const autoError = config?.autoError !== false
+  // AW-2：session_end 覆盖式 checkpoint 周期，0 = 关闭
+  const checkpointInterval = config?.checkpointInterval ?? 60000
 
   const queue: StatsEvent[] = []
   let sessionStart = 0
   let timer: ReturnType<typeof setInterval> | null = null
+  let checkpointTimer: ReturnType<typeof setInterval> | null = null
+  /** 同一时刻只允许一条在途 checkpoint，避免 duration 重复计入 */
+  let checkpointInFlight = false
   let initialized = false
 
   // 缓存设备信息（init 时填充）
@@ -46,6 +51,7 @@ export function createStatsModule(client: SdkClient, config?: StatsConfig) {
       app_id: client.appId,
       platform: cachedPlatform,
       device_id: cachedDeviceId,
+      app_version: client.versionCode ? String(client.versionCode) : undefined,
       os: cachedOs,
       browser: cachedBrowser,
       screen_w: cachedScreenW,
@@ -97,11 +103,40 @@ export function createStatsModule(client: SdkClient, config?: StatsConfig) {
     client.sessionId = generateSessionId()
     sessionStart = Date.now()
     enqueue({ event_type: 'session_start' })
+    restartCheckpointTimer()
   }
 
-  /** 结束会话 */
+  /**
+   * 覆盖式时长 checkpoint（AW-2）：会话进行中周期性发一条 session_end（同一 session_id、
+   * duration = 自会话起的累计秒数）。移动端/崩溃/杀进程时 beforeunload 不可靠，
+   * 服务端按 session_id 聚合取后到的更大值，兜底时长不丢。
+   */
+  function sendCheckpoint(): void {
+    if (!client.sessionId || !sessionStart) return
+    if (checkpointInFlight) return
+    checkpointInFlight = true
+    const duration = Math.round((Date.now() - sessionStart) / 1000)
+    enqueue({ event_type: 'session_end', duration })
+    flush().finally(() => { checkpointInFlight = false })
+  }
+
+  /** 重置 checkpoint 周期（会话启动/页面重新可见时对齐） */
+  function restartCheckpointTimer(): void {
+    if (checkpointTimer) { clearInterval(checkpointTimer); checkpointTimer = null }
+    if (!checkpointInterval) return
+    checkpointTimer = setInterval(() => sendCheckpoint(), checkpointInterval)
+  }
+
+  /** 停止 checkpoint 周期（会话结束/模块销毁时） */
+  function stopCheckpointTimer(): void {
+    if (checkpointTimer) { clearInterval(checkpointTimer); checkpointTimer = null }
+    checkpointInFlight = false
+  }
+
+  /** 结束会话（最终一条 session_end，覆盖所有 checkpoint） */
   function endSession(useBeacon = false): void {
     if (!client.sessionId) return
+    stopCheckpointTimer()
     const duration = Math.round((Date.now() - sessionStart) / 1000)
     enqueue({ event_type: 'session_end', duration })
     client.sessionId = ''
@@ -111,7 +146,7 @@ export function createStatsModule(client: SdkClient, config?: StatsConfig) {
   }
 
   return {
-    /** 初始化：缓存设备信息、启动定时上报、注册全局监听 */
+    /** 初始化：缓存设备信息、启动定时上报与时长 checkpoint、注册页面生命周期监听 */
     init(): void {
       if (initialized) return
 
@@ -131,15 +166,21 @@ export function createStatsModule(client: SdkClient, config?: StatsConfig) {
       // 定时 flush
       timer = setInterval(() => flush(), reportInterval)
 
-      // 页面隐藏时 flush
+      // 页面隐藏时：先落一条 checkpoint（移动端可能直接杀进程），再 flush 队列；
+      // 重新可见时对齐 checkpoint 周期（后台定时器被节流，重计 60s 更准）
       if (typeof document !== 'undefined') {
         onVisibilityHandler = () => {
-          if (document.visibilityState === 'hidden') flush()
+          if (document.visibilityState === 'hidden') {
+            sendCheckpoint()
+            flush()
+          } else {
+            restartCheckpointTimer()
+          }
         }
         document.addEventListener('visibilitychange', onVisibilityHandler)
       }
 
-      // 页面关闭前结束会话
+      // 页面关闭前结束会话（最终时长）
       if (typeof window !== 'undefined') {
         onBeforeUnloadHandler = () => endSession(true)
         window.addEventListener('beforeunload', onBeforeUnloadHandler)
@@ -177,6 +218,7 @@ export function createStatsModule(client: SdkClient, config?: StatsConfig) {
       if (!initialized) return
       endSession()
       if (timer) { clearInterval(timer); timer = null }
+      stopCheckpointTimer()
       if (onVisibilityHandler) document.removeEventListener('visibilitychange', onVisibilityHandler)
       if (onBeforeUnloadHandler) window.removeEventListener('beforeunload', onBeforeUnloadHandler)
       if (onErrorHandler) window.removeEventListener('error', onErrorHandler)
