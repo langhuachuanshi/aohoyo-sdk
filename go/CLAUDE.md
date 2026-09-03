@@ -15,9 +15,12 @@ Go 1.21+，**零三方依赖**（仅标准库），module：`github.com/aohoyo/s
 ## 架构
 
 ```
-├── client.go       ← 统一入口 aohoyo.New(appID, secret, baseURL)，组合 s2s + stats
+├── client.go       ← 统一入口 aohoyo.New(appID, secret, baseURL)，组合 s2s + stats + uc
 ├── s2s/            ← S2S 签名 + 存储客户端（Upload/GetUploadToken/Delete）
-└── stats/          ← 统计上报（公开接口，无需签名）
+├── stats/          ← 统计上报
+├── uc/             ← 用户中心 Token 验证（Bearer 透传）
+└── native/         ← 桌面端原生安全模块（Wails 可绑定；指纹/风险检测/DeviceSign 签名/安全存储，
+                      含 ReportDeviceWithRisks 风险上报与 GetSecurityConfig 策略拉取，SEC-1）
 ```
 
 **推荐**：统一入口 `c, _ := aohoyo.New(...)` → `c.S2S.Upload()` / `c.Stats.ReportEvent()`

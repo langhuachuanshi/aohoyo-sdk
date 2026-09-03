@@ -43,7 +43,7 @@ src/
     ├── device.ts     ← 设备上报/验证（HMAC-SHA256 签名）
     ├── upgrade.ts    ← 版本升级检测/自动轮询
     ├── oauth.ts      ← 第三方登录（OAuth）
-    ├── stats.ts      ← 统计埋点（session/page_view/error/custom）
+    ├── stats.ts      ← 统计埋点（session/page_view/custom + 60s 时长 checkpoint；error 捕获已下线）
     ├── captcha.ts    ← 验证码（阿里云滑块 + 图片验证码）
     ├── storage.ts    ← 文件存储（头像上传）
     └── cloud.ts      ← ⚠️ 云变量/云函数（已下线，保留兼容）
@@ -131,9 +131,9 @@ sdk.stats.trackEvent('button_click', { button: 'buy' })
 | `getPasswordPolicy` | `() => Promise<PasswordPolicy>` | 获取密码策略（公开接口），用于前端预校验 |
 | `sendProfileCode` | `(data: { scene, type, target, ... }) => Promise<void>` | 发送绑定/换绑验证码（需登录态） |
 | `bindPhone` | `(data: { phone, code }) => Promise<void>` | 绑定手机（当前无手机时） |
-| `changePhone` | `(data: { phone, code }) => Promise<void>` | 换绑手机（当前已有手机时） |
+| `changePhone` | `(data: { phone, code, old_code? }) => Promise<void>` | 换绑手机（当前已有手机时）；启用旧号验证时需先验当前号拿 old_code（UC-17） |
 | `bindEmail` | `(data: { email, code }) => Promise<void>` | 绑定邮箱（当前无邮箱时） |
-| `changeEmail` | `(data: { email, code }) => Promise<void>` | 换绑邮箱（当前已有邮箱时） |
+| `changeEmail` | `(data: { email, code, old_code? }) => Promise<void>` | 换绑邮箱（当前已有邮箱时）；启用旧邮箱验证时需先验当前邮箱拿 old_code（UC-17） |
 | `sendEmailVerify` | `() => Promise<void>` | 发送邮箱验证码到当前用户邮箱 |
 | `verifyEmail` | `(code: string) => Promise<void>` | 校验邮箱验证码，成功后 email_verified 置 1 |
 | `getMenuTree` | `(appId?: string) => Promise<MenuItem[]>` | 获取当前用户菜单树（可按应用过滤） |
@@ -160,10 +160,14 @@ sdk.stats.trackEvent('button_click', { button: 'buy' })
 
 | 函数 | 签名 | 说明 |
 |------|------|------|
-| `report` | `(params?: { user_id?: number }) => Promise<void>` | 设备上报，使用 HMAC-SHA256 签名（需要 app_secret） |
+| `report` | `(params?: { user_id?: number }) => Promise<void>` | 设备上报，使用 HMAC-SHA256 签名（需要 app_secret）。risk_flags 优先取桌面原生桥 `DetectRisks()`（映射服务端枚举、按安全策略裁剪），纯浏览器为 `[]`；策略 `risk_policy=block` 且有风险时上报后触发 `onRiskBlocked` 回调 |
 | `verify` | `() => Promise<DeviceVerifyResponse>` | 设备验证，同样需要签名 |
+| `detectRisks` | `() => Promise<RiskFlag[]>` | 桌面端风险检测（原生桥 → 枚举映射 → 策略裁剪），桥缺失静默返回 `[]` |
+| `getSecurityConfig` | `(force?: boolean) => Promise<SecurityConfig \| null>` | 拉取桌面端安全策略（DeviceSign），首次 report 前自动拉取并缓存，失败返回 null 按默认策略降级 |
 
 **签名机制：** `HMAC-SHA256(app_secret, "device_id\ntimestamp\nbody")`，通过 `X-App-ID` / `X-Device-Sign` / `X-Device-ID` / `X-Timestamp` 请求头发送。
+
+**risk_flags 枚举（服务端 risk.Analyze）：** `emulator` / `multiopen` / `root` / `hook` / `sign`（sign 为服务端判定项，客户端不产生；原生桥的 `debug` 不在枚举内，上报前丢弃）。
 
 ### 5. upgrade 模块 — 版本升级
 
@@ -205,19 +209,19 @@ sdk.stats.trackEvent('button_click', { button: 'buy' })
 
 | 函数 | 签名 | 说明 |
 |------|------|------|
-| `init` | `() => void` | 初始化：采集设备信息、启动 session_start、定时上报（10s）、全局错误监听 |
-| `destroy` | `() => void` | 销毁：结束会话、清除定时器、移除事件监听 |
+| `init` | `() => void` | 初始化：采集设备信息、启动 session_start、定时上报（10s）、60s 时长 checkpoint、页面生命周期监听 |
+| `destroy` | `() => void` | 销毁：结束会话、清除定时器（含 checkpoint）、移除事件监听 |
 | `trackPageView` | `(path: string, title?: string) => void` | 上报页面浏览事件 |
 | `trackEvent` | `(name: string, params?: Record<string, any>) => void` | 上报自定义事件 |
-| `trackError` | `(error: Error \| string, stack?: string) => void` | 上报错误事件 |
+| `trackError` | `(error: Error \| string, stack?: string) => void` | ⚠️ @deprecated：错误捕获已下线（SDK-4），error 事件类型仅为协议兼容保留 |
 | `setUserId` | `(id: string) => void` | 设置用户 ID（登录后） |
 | `clearUserId` | `() => void` | 清除用户 ID（登出时） |
 
 **自动采集：**
-- 定时批量上报（默认 10s 间隔，50 条/批）
-- JS 运行时错误（`window.error` + `unhandledrejection`）
-- 页面隐藏时 flush，关闭前 sendBeacon 同步发送
-- session_start / session_end 自动管理
+- 定时批量上报（默认 10s 间隔，50 条/批），事件统一带 `app_version`
+- session_end 覆盖式 checkpoint（默认 60s，`checkpointInterval` 可配，0=关闭）：同一 session_id、duration 为累计秒数，兜底移动端/杀进程丢失；依赖服务端按 session_id 取 MAX(duration) 的覆盖式聚合口径
+- 页面隐藏时落 checkpoint + flush，关闭前 sendBeacon 发最终 session_end
+- ❌ JS 运行时错误捕获已下线（SDK-4）：不再监听 `window.error` / `unhandledrejection`
 
 ### 8. captcha 模块 — 验证码
 
@@ -266,6 +270,7 @@ sdk.stats.trackEvent('button_click', { button: 'buy' })
 | `storage` | `{ getItem, setItem, removeItem }` | ❌ | 自定义存储（默认 localStorage） |
 | `timeout` | `number` | ❌ | 请求超时（ms） |
 | `session_mode` | `SessionMode` | ❌ | 会话模式，默认 `heartbeat` |
+| `onRiskBlocked` | `(flags: RiskFlag[]) => void` | ❌ | 安全策略 `risk_policy=block` 且 device.report 检测到风险时触发（SEC-1），宿主自行决定阻断 UI |
 
 ### HTTP 方法
 
