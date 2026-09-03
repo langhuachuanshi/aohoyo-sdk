@@ -40,10 +40,10 @@ async function buildSignHeaders(
 }
 
 /**
- * 服务端 risk.Analyze 接受的 risk_flags 枚举（sign 为服务端判定项，客户端检测不产生）。
- * go/native DetectRisks 的 debug 不在枚举内（服务端会忽略），客户端先行裁剪。
+ * 服务端 risk.Analyze 接受的 risk_flags 枚举（debug 对应 RiskDebug=6，主仓库 022c5a4 起支持；
+ * sign 为服务端判定项，客户端检测不产生）。
  */
-const RISK_FLAG_ENUM: ReadonlySet<string> = new Set(['emulator', 'multiopen', 'root', 'hook'])
+const RISK_FLAG_ENUM: ReadonlySet<string> = new Set(['debug', 'emulator', 'multiopen', 'root', 'hook'])
 
 /**
  * 从桌面原生桥检测风险（window.__AOHOYO_NATIVE__.DetectRisks，go/native 暴露给 Wails 前端的绑定）。
@@ -73,6 +73,7 @@ function pruneRiskFlagsByPolicy(flags: RiskFlag[], cfg: SecurityConfig | null): 
   if (!cfg) return flags
   return flags.filter(f => {
     switch (f) {
+      case 'debug': return cfg.anti_debug !== false
       case 'emulator': return cfg.emulator_detect !== false
       case 'root': return cfg.root_detect !== false
       case 'hook': return cfg.hook_detect !== false

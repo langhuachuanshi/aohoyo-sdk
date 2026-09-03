@@ -167,7 +167,7 @@ sdk.stats.trackEvent('button_click', { button: 'buy' })
 
 **签名机制：** `HMAC-SHA256(app_secret, "device_id\ntimestamp\nbody")`，通过 `X-App-ID` / `X-Device-Sign` / `X-Device-ID` / `X-Timestamp` 请求头发送。
 
-**risk_flags 枚举（服务端 risk.Analyze）：** `emulator` / `multiopen` / `root` / `hook` / `sign`（sign 为服务端判定项，客户端不产生；原生桥的 `debug` 不在枚举内，上报前丢弃）。
+**risk_flags 枚举（服务端 risk.Analyze）：** `debug` / `emulator` / `multiopen` / `root` / `hook` / `sign`（debug 对应 RiskDebug=6；sign 为服务端判定项，客户端不产生）。检测项按安全策略开关裁剪（如 anti_debug=false 则 debug 不上报）。
 
 ### 5. upgrade 模块 — 版本升级
 

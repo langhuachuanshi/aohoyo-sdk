@@ -74,9 +74,10 @@ export interface DeviceVerifyResponse {
 
 /**
  * 设备风险标志（devices/report 的 risk_flags，服务端 risk.Analyze 接受的枚举）。
- * sign 为服务端判定项（异常签名），客户端检测不产生。
+ * debug 对应 RiskDebug=6（主仓库 022c5a4 起支持）；sign 为服务端判定项（异常签名），
+ * 客户端检测不产生。
  */
-export type RiskFlag = 'emulator' | 'multiopen' | 'root' | 'hook' | 'sign'
+export type RiskFlag = 'debug' | 'emulator' | 'multiopen' | 'root' | 'hook' | 'sign'
 
 /** 桌面端安全策略下发（POST /as/v1/app/security/config 响应，DeviceSign 鉴权） */
 export interface SecurityConfig {
