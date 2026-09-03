@@ -20,6 +20,10 @@
   （同一 session_id、duration=自会话起的累计秒数，后到更大值覆盖先到的），兜底移动端/崩溃/杀进程
   导致的 beforeunload 丢失；页面隐藏时立即落一条 checkpoint、重新可见时对齐周期；
   同一时刻仅一条在途 checkpoint（防 duration 重复计入）；`StatsConfig.checkpointInterval` 可配（0=关闭）
+- **换绑两步验证类型（UC-17 配套）**: `changePhone` / `changeEmail` 参数补可选 `old_code`
+  （先向当前号/邮箱发码拿到 old_code，再向新号发码，提交时带 old_code + code；
+  目标应用启用旧号验证时缺 old_code 会收到「请先验证当前手机号/邮箱」）
+
 ### 变更
 
 - **错误自动捕获下线（SDK-4）**: 移除 `window error` / `unhandledrejection` 全局监听及上报，

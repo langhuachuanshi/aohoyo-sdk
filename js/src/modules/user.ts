@@ -63,8 +63,13 @@ export function createUserModule(client: SdkClient) {
       return client.post('/uc/v1/profile/phone/bind', data)
     },
 
-    /** 换绑手机（当前已有手机时，scene=change_phone） */
-    changePhone(data: { phone: string; code: string }): Promise<void> {
+    /**
+     * 换绑手机（当前已有手机时，scene=change_phone）。
+     * 两步验证（UC-17）：目标应用启用旧号验证时（服务端按用户是否有旧号强制），
+     * 先向当前手机号发码（target=当前号）拿到 old_code，再向新号发码；
+     * 缺 old_code 会收到「请先验证当前手机号」。
+     */
+    changePhone(data: { phone: string; code: string; old_code?: string }): Promise<void> {
       return client.post('/uc/v1/profile/phone/change', data)
     },
 
@@ -73,8 +78,13 @@ export function createUserModule(client: SdkClient) {
       return client.post('/uc/v1/profile/email/bind', data)
     },
 
-    /** 换绑邮箱（当前已有邮箱时，scene=change_email） */
-    changeEmail(data: { email: string; code: string }): Promise<void> {
+    /**
+     * 换绑邮箱（当前已有邮箱时，scene=change_email）。
+     * 两步验证（UC-17）：目标应用启用旧邮箱验证时（服务端按用户是否有旧邮箱强制），
+     * 先向当前邮箱发码（target=当前邮箱）拿到 old_code，再向新邮箱发码；
+     * 缺 old_code 会收到「请先验证当前邮箱」。
+     */
+    changeEmail(data: { email: string; code: string; old_code?: string }): Promise<void> {
       return client.post('/uc/v1/profile/email/change', data)
     },
 
