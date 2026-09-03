@@ -1,6 +1,6 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
 import { getDeviceInfo, initDeviceId } from './device'
-import type { DeviceInfo, SessionMode } from './types'
+import type { DeviceInfo, RiskFlag, SessionMode } from './types'
 
 export interface SdkConfig {
   /** 后端 API 基础地址，如 https://api.example.com */
@@ -17,6 +17,11 @@ export interface SdkConfig {
   platform?: string
   /** Token 过期回调，各端自行处理跳转逻辑 */
   onTokenExpired?: () => void
+  /**
+   * 风险阻断回调（SEC-1）：安全策略 risk_policy=block 且 device.report 检测到风险时触发，
+   * 上报照常完成后调用。由宿主应用决定阻断 UI（弹窗/退出），SDK 不自行阻断。
+   */
+  onRiskBlocked?: (flags: RiskFlag[]) => void
   /** Token 存储抽象，默认使用 localStorage */
   storage?: {
     getItem: (key: string) => string | null
@@ -203,6 +208,11 @@ export class SdkClient {
   /** 获取会话模式 */
   get sessionMode() {
     return this.config.session_mode ?? 'heartbeat'
+  }
+
+  /** 风险阻断回调（安全策略 risk_policy=block 时由 device 模块触发） */
+  get onRiskBlocked() {
+    return this.config.onRiskBlocked
   }
 
   /** 更新会话模式（登录后由后台下发配置覆盖本地默认值时调用） */

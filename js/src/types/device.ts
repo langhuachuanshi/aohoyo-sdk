@@ -71,3 +71,31 @@ export interface DeviceVerifyResponse {
   risk_type: number
   is_safe: boolean
 }
+
+/**
+ * 设备风险标志（devices/report 的 risk_flags，服务端 risk.Analyze 接受的枚举）。
+ * sign 为服务端判定项（异常签名），客户端检测不产生。
+ */
+export type RiskFlag = 'emulator' | 'multiopen' | 'root' | 'hook' | 'sign'
+
+/** 桌面端安全策略下发（POST /as/v1/app/security/config 响应，DeviceSign 鉴权） */
+export interface SecurityConfig {
+  app_id: string
+  /** 1=启用 */
+  status: number
+  anti_debug: boolean
+  anti_multi_open: boolean
+  emulator_detect: boolean
+  hook_detect: boolean
+  root_detect: boolean
+  replay_protection: boolean
+  integrity_check: boolean
+  max_devices: number
+  cert_pin: string
+  license_mode: string
+  offline_grace_days: number
+  /** report=只上报（默认） observe=上报观察 block=检测到风险时回调阻断 */
+  risk_policy: 'report' | 'observe' | 'block'
+  upgrade_signature: string
+  config_json: string
+}

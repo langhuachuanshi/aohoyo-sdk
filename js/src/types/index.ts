@@ -1,4 +1,4 @@
-export type { DeviceInfo, NativeDeviceInfo, DeviceReportParams, DeviceVerifyParams, DeviceVerifyResponse } from './device'
+export type { DeviceInfo, NativeDeviceInfo, DeviceReportParams, DeviceVerifyParams, DeviceVerifyResponse, RiskFlag, SecurityConfig } from './device'
 export type { LoginParams, RegisterParams, LoginUser, LoginResponse, RefreshResponse, SessionMode } from './auth'
 export type { UserInfoResponse, MenuItem, PasswordPolicy } from './user'
 export type { UpgradeCheckParams, UpgradeCheckResponse, UpgradeStrategy, AutoCheckConfig } from './upgrade'

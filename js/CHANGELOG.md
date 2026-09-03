@@ -2,6 +2,19 @@
 
 本文件记录 sdk-js 的所有变更。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [Unreleased]
+
+### 新增
+
+- **device 模块风险检测接线（SEC-1）**：`device.report` 的 `risk_flags` 优先取桌面原生桥
+  `window.__AOHOYO_NATIVE__.DetectRisks()` 结果（映射服务端枚举 emulator/multiopen/root/hook，
+  `debug` 不在枚举内被丢弃），纯浏览器环境保持空数组，桥缺失/调用失败静默降级不影响主流程
+- **安全策略下发消费（SEC-1）**：新增 `sdk.device.getSecurityConfig()`（POST /as/v1/app/security/config，
+  DeviceSign 鉴权），首次 report 前自动拉取一次并缓存；检测项按策略开关裁剪（如 emulator_detect=false
+  则该项不上报、不参与阻断判定）；`risk_policy=block` 且检测到风险时上报完成后触发
+  `SdkConfig.onRiskBlocked` 回调（可中断信号，由宿主应用决定阻断 UI）；新增 `sdk.device.detectRisks()`
+- **新增类型**：`RiskFlag`、`SecurityConfig`（types/device.ts，统一导出）
+
 ## [0.8.0] - 2026-08-10
 
 ### 破坏性变更（Breaking）
