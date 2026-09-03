@@ -19,7 +19,7 @@ function generateSessionId(): string {
 export function createStatsModule(client: SdkClient, config?: StatsConfig) {
   const reportInterval = config?.reportInterval ?? 10000
   const batchSize = config?.batchSize ?? 50
-  const autoError = config?.autoError !== false
+  // SDK-4：错误自动捕获已下线（autoError 保留为兼容字段，不再生效）
   // AW-2：session_end 覆盖式 checkpoint 周期，0 = 关闭
   const checkpointInterval = config?.checkpointInterval ?? 60000
 
@@ -40,8 +40,6 @@ export function createStatsModule(client: SdkClient, config?: StatsConfig) {
   let cachedDeviceId = ''
 
   // 事件监听器引用（destroy 时移除）
-  let onErrorHandler: EventListener | null = null
-  let onRejectionHandler: ((e: PromiseRejectionEvent) => void) | null = null
   let onVisibilityHandler: (() => void) | null = null
   let onBeforeUnloadHandler: (() => void) | null = null
 
@@ -186,30 +184,6 @@ export function createStatsModule(client: SdkClient, config?: StatsConfig) {
         window.addEventListener('beforeunload', onBeforeUnloadHandler)
       }
 
-      // 自动采集 JS 错误
-      if (autoError && typeof window !== 'undefined') {
-        onErrorHandler = ((event: ErrorEvent) => {
-          enqueue({
-            event_type: 'error',
-            error_msg: event.message || String(event),
-            error_stack: event.error?.stack || '',
-            path: typeof location !== 'undefined' ? location.pathname : '',
-          })
-        }) as EventListener
-        window.addEventListener('error', onErrorHandler)
-
-        onRejectionHandler = (e: PromiseRejectionEvent) => {
-          const reason = e.reason
-          enqueue({
-            event_type: 'error',
-            error_msg: reason?.message || String(reason),
-            error_stack: reason?.stack || '',
-            path: typeof location !== 'undefined' ? location.pathname : '',
-          })
-        }
-        window.addEventListener('unhandledrejection', onRejectionHandler)
-      }
-
       initialized = true
     },
 
@@ -221,8 +195,6 @@ export function createStatsModule(client: SdkClient, config?: StatsConfig) {
       stopCheckpointTimer()
       if (onVisibilityHandler) document.removeEventListener('visibilitychange', onVisibilityHandler)
       if (onBeforeUnloadHandler) window.removeEventListener('beforeunload', onBeforeUnloadHandler)
-      if (onErrorHandler) window.removeEventListener('error', onErrorHandler)
-      if (onRejectionHandler) window.removeEventListener('unhandledrejection', onRejectionHandler)
       initialized = false
     },
 
@@ -245,7 +217,11 @@ export function createStatsModule(client: SdkClient, config?: StatsConfig) {
       })
     },
 
-    /** 上报错误 */
+    /**
+     * 手动上报错误。
+     * @deprecated SDK-4：全局错误自动捕获已下线（window.onerror/unhandledrejection 不再监听），
+     * error 事件类型仅为协议兼容保留；如需错误收集请业务侧自建。
+     */
     trackError(error: Error | string, stack?: string): void {
       enqueue({
         event_type: 'error',

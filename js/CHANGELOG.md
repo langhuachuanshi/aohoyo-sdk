@@ -20,6 +20,12 @@
   （同一 session_id、duration=自会话起的累计秒数，后到更大值覆盖先到的），兜底移动端/崩溃/杀进程
   导致的 beforeunload 丢失；页面隐藏时立即落一条 checkpoint、重新可见时对齐周期；
   同一时刻仅一条在途 checkpoint（防 duration 重复计入）；`StatsConfig.checkpointInterval` 可配（0=关闭）
+### 变更
+
+- **错误自动捕获下线（SDK-4）**: 移除 `window error` / `unhandledrejection` 全局监听及上报，
+  SDK 不再自动产生 error 事件。`StatsEventType` 的 `error` 仅为协议兼容保留（存量客户端仍可上报，
+  服务端通道保留）；`trackError` 标记 @deprecated（手动调用仍可用），`StatsConfig.autoError` 不再生效
+  （字段保留仅为避免接入方编译破坏）。批量上报请求结构不变
 
 ## [0.8.0] - 2026-08-10
 

@@ -31,7 +31,7 @@ export interface StatsConfig {
   reportInterval?: number
   /** 单次最大上报条数，默认 50（与后端 StatsEventBatch 一致） */
   batchSize?: number
-  /** 是否自动采集 JS 错误，默认 true */
+  /** @deprecated SDK-4：错误自动捕获已下线，此选项不再生效（保留字段仅为兼容） */
   autoError?: boolean
   /**
    * session_end 覆盖式 checkpoint 周期（毫秒），默认 60000。
