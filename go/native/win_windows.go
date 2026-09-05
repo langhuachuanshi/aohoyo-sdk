@@ -91,8 +91,8 @@ func isDebuggerPresent() bool {
 	return r != 0
 }
 
-// tokenElevation 结构（TOKEN_ELEVATION）
-type tokenElevation struct {
+// tokenElevationInfo 结构（TOKEN_ELEVATION）
+type tokenElevationInfo struct {
 	TokenIsElevated uint32
 }
 
@@ -108,7 +108,7 @@ func isElevated() bool {
 	}
 	defer token.Close()
 
-	var elev tokenElevation
+	var elev tokenElevationInfo
 	var retLen uint32
 	r, _, _ := procGetTokenInformation.Call(
 		uintptr(token), uintptr(tokenElevation),
