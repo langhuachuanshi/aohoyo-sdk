@@ -9,7 +9,7 @@ aohoyo 平台 SDK 集合。给外部项目接入 aohoyo 用户系统与应用管
 | server-go | `go/` | Go | 外部后端（wilas 等） | `go get github.com/langhuachuanshi/aohoyo-sdk/go` |
 | client-js | `js/` | TypeScript | 外部前端（浏览器/APP） | `npm install @aohoyo/client-sdk` |
 | desktop-native-go | `go/native/` | Go | 桌面端 Wails 原生安全模块 | 随 server-go 发布 |
-| desktop-native-rust | `rust/native/` | Rust | 桌面端 Tauri 原生安全模块 | `cargo add aohoyo-native`（`rust/v*` tag） |
+| desktop-native-rust | `rust/native/` | Rust | 桌面端 Tauri 原生安全+升级模块 | `cargo add aohoyo-native`（`rust/v*` tag） |
 
 ## 快速开始
 

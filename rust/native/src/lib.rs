@@ -6,14 +6,16 @@
 //! Tauri 集成：在 `tauri::generate_handler!` 中包装本模块方法为 command，
 //! 或直接在 Rust 侧调用本模块原语（见 README 示例）。
 
+pub mod download;
 pub mod fingerprint;
+pub mod install;
 pub mod mutex;
 pub mod risks;
 pub mod secure;
 pub mod sign;
 pub mod upgrade;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
 /// 机器指纹结果
@@ -42,6 +44,66 @@ pub struct SignResult {
 pub struct IntegrityResult {
     pub hash: String,
     pub ok: bool,
+}
+
+/// 升级检测请求。platform 建议必传——服务端按平台取「该平台有包的最新版本」（平台独立节奏）。
+#[derive(Debug, Clone, Deserialize)]
+pub struct CheckRequest {
+    pub current_version_code: i64,
+    #[serde(default)]
+    pub platform: String, // windows/macos/linux/android/ios
+    #[serde(default)]
+    pub channel_code: String,
+    #[serde(default)]
+    pub device_id: String, // 灰度确定性分配依赖此值
+}
+
+/// 升级检测结果。字段序与服务端 CheckResp 严格一致（签名相关，勿调整声明顺序）。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CheckResult {
+    pub has_update: bool,
+    pub force_update: bool,
+    pub latest_version: String,
+    pub latest_version_code: i64,
+    pub platform: String,
+    pub download_url: String,
+    pub file_size: i64,
+    pub md5: String,
+    pub sha256: String,
+    pub update_log: String,
+    #[serde(default)]
+    pub signature: String,
+    /// 服务端响应 data 的原始 JSON（已删 signature 尾段），verify_check_result 用它复算 HMAC
+    #[serde(skip)]
+    pub raw_manifest: String,
+}
+
+/// 安装选项。silent_args 覆盖 exe 安装器默认静默参数（默认 /SILENT，NSIS/Inno 兼容）。
+#[derive(Debug, Clone, Default)]
+pub struct InstallOptions {
+    pub silent_args: Option<String>,
+}
+
+/// 一站式升级选项。
+pub struct UpgradeOptions {
+    pub install: Option<InstallOptions>,
+    /// 安装包落地目录，默认系统临时目录
+    pub download_dir: Option<String>,
+    /// 阶段回调：checking / downloading（received/total 持续回调）/ verifying / installing
+    pub on_stage: Option<Box<dyn FnMut(&str, u64, u64)>>,
+}
+
+impl Default for UpgradeOptions {
+    fn default() -> Self {
+        Self { install: None, download_dir: None, on_stage: None }
+    }
+}
+
+/// 一站式升级结果。install_launched=true 时安装器已启动，宿主应立即退出当前进程。
+pub struct UpgradeReport {
+    pub result: CheckResult,
+    pub installer_path: String,
+    pub install_launched: bool,
 }
 
 /// 桌面端安全原语集合

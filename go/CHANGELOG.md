@@ -2,6 +2,16 @@
 
 本文件记录 sdk/server-go 的所有变更。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [Unreleased]
+
+### 新增
+
+- **native 升级执行链（go/native，与 rust/native 同构）**: `CheckUpgrade`（POST /as/v1/upgrade/check，
+  按平台取该平台最新可用版本——平台独立节奏）+ `VerifyCheckResult`（清单签名复算，字节级提取 manifest
+  避免跨语言序列化差异，未开启签名自动跳过）+ `DownloadFile`（断点续传 Range + 进度回调，续传被拒自动重下）+
+  `VerifyFile`（SHA256 优先/MD5）+ `Install`（Windows msi/exe 静默、Linux deb/rpm/AppImage 自替换、macOS pkg，
+  分离进程启动）+ `PerformUpgrade` 一站式（OnStage 阶段回调）。契约对齐主仓库 upgrade-integration.md（2026-09-04 定稿）
+
 ## [1.1.0] - 2026-09-03
 
 > 首个包含 desktop-native（go/native）的发布版本。版本号承接 go/v1.0.0

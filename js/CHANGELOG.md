@@ -2,6 +2,15 @@
 
 本文件记录 sdk-js 的所有变更。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [Unreleased]
+
+### 变更
+
+- **upgrade 模块契约对齐（2026-09-04 主仓库升级链路定稿）**: `UpgradeCheckResponse` 新增可选 `signature`
+  字段（仅透传——app_secret 不下发 WebView，验签由宿主原生层 rust `verify_check_result` / go
+  `VerifyCheckResult` 完成）；`platform` 参数语义升级并在类型/JSDoc 标注强烈建议必传（服务端按平台取
+  「该平台有包的最新版本」，平台独立节奏，不传回退全局最新兼容旧版本）。检测路径确认 /as/v1/upgrade/check
+
 ## [0.9.0] - 2026-09-03
 
 ### 新增
