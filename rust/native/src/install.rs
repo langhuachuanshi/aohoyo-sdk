@@ -13,7 +13,8 @@ pub const STAGE_INSTALLING: &str = "installing";
 impl Native {
     /// 启动安装器（分离进程，不等待安装完成）。返回 Ok 即已启动，宿主应尽快退出当前进程。
     ///
-    /// - Windows: `.msi` → `msiexec /quiet`；`.exe` → `silent_args`（默认 `/SILENT`，NSIS/Inno 兼容）
+    /// - Windows: `.msi` → `msiexec /quiet`；`.exe` → `silent_args`（默认 `/SILENT`，NSIS/Inno 兼容）；
+    ///   `.zip` → 解包自替换（单文件包换血下次启动生效 / 多文件包脚本换血并自动重启，见 zip_install）
     /// - Linux: `.deb` → `dpkg -i` / `.rpm` → `rpm -Uvh`（自动尝试 pkexec 提权）；`.AppImage` → 替换当前可执行文件
     /// - macOS: `.pkg` → `installer -pkg`；`.dmg` 场景差异大，返回错误由宿主处理
     pub fn install(&self, installer_path: &str, opts: Option<&InstallOptions>) -> Result<(), Box<dyn std::error::Error>> {
@@ -37,6 +38,7 @@ impl Native {
             match ext.as_str() {
                 "msi" => return run_detached("msiexec", &["/i", installer_path, "/quiet", "/norestart"]),
                 "exe" => return run_detached(installer_path, &[silent]),
+                "zip" => return crate::zip_install::install_zip(installer_path),
                 _ => {}
             }
         }
@@ -147,7 +149,7 @@ pub(crate) fn filename_from_url(u: &str) -> String {
 }
 
 /// 分离启动进程：不等待退出，宿主退出不牵连子进程。
-fn run_detached(program: &str, args: &[&str]) -> Result<(), Box<dyn std::error::Error>> {
+pub(crate) fn run_detached(program: &str, args: &[&str]) -> Result<(), Box<dyn std::error::Error>> {
     std::process::Command::new(program)
         .args(args)
         .spawn()
@@ -178,13 +180,23 @@ fn which_pkexec() -> Result<String, std::io::Error> {
     Err(std::io::Error::new(std::io::ErrorKind::NotFound, "pkexec"))
 }
 
-/// AppImage 自替换：旧文件改名保留，新文件落到当前可执行路径（下次启动生效）。
-fn replace_self(new_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+/// 自替换：旧文件改名保留（统一 `.old` 后缀），新文件落到当前可执行路径（下次启动生效）。
+/// AppImage（Linux）与 Windows 单文件 zip 包共用。
+pub(crate) fn replace_self(new_path: &str) -> Result<(), Box<dyn std::error::Error>> {
     let self_path = std::env::current_exe()?;
     let real = std::fs::canonicalize(&self_path).unwrap_or(self_path);
-    let old = real.with_extension("AppImage.old");
+    let file_name = real
+        .file_name()
+        .ok_or("无法定位当前可执行文件名")?
+        .to_string_lossy()
+        .to_string();
+    let old = real.with_file_name(format!("{file_name}.old"));
     std::fs::rename(&real, &old).map_err(|e| format!("旧版本改名失败: {e}"))?;
-    std::fs::copy(new_path, &real)?;
+    if let Err(e) = std::fs::copy(new_path, &real) {
+        // 新文件落位失败 → 回滚改名，保持原样
+        let _ = std::fs::rename(&old, &real);
+        return Err(format!("新版本落位失败: {e}").into());
+    }
     set_executable(&real)?;
     Ok(())
 }

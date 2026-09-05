@@ -14,6 +14,7 @@ pub mod risks;
 pub mod secure;
 pub mod sign;
 pub mod upgrade;
+mod zip_install;
 
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;

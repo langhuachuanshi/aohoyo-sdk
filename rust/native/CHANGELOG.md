@@ -6,6 +6,13 @@
 
 ### 新增
 
+- **Windows zip 包自更新**: `install`/`perform_upgrade` 支持 `.zip` 安装包——后台版本管理本就接受
+  zip 上传，此前原生层在安装阶段报「暂不支持」。约定：zip 内容 = 应用安装目录完整内容（或单个主
+  exe），主 exe 识别 = zip 根下与包同名 exe（忽略大小写），否则根下唯一 exe；顶层唯一目录自动剥壳；
+  条目路径安全校验（拒绝 `..` 穿越/绝对路径/盘符，防 Zip Slip）。策略：单文件包进程内换血
+  （当前 exe 改名 `.old` 保留，下次启动生效，同 AppImage）；多文件包解压到安装目录旁 staging，
+  分离脚本等宿主退出后整目录换血（旧目录留 `.old`）并自动重启新版。非 Windows 平台维持「暂不支持」。
+  新增依赖 zip crate（仅 deflate 特性，默认特性全关）。与 go/native upgrade_zip.go 同构
 - **升级执行链（与 go/native 同构）**: `check_upgrade`（POST /as/v1/upgrade/check，按平台取该平台最新可用
   版本——平台独立节奏）+ `verify_check_result`（清单签名复算，字节级提取 manifest 避免跨语言序列化差异，
   未开启签名自动跳过）+ `download_file`（断点续传 Range + 进度回调，续传被拒自动重下）+ `verify_file`

@@ -19,7 +19,7 @@
 | `verify_check_result` | 检测结果清单签名复算（字节级 manifest，防篡改） | upgrade_signature |
 | `download_file` | 安装包下载（断点续传 Range + 进度回调） | 版本管理 |
 | `verify_file` | 文件哈希校验（SHA256 优先 / MD5） | 版本管理 |
-| `install` | 启动安装器（Windows msi/exe 静默；Linux deb/rpm/AppImage；macOS pkg），分离进程 | 版本管理 |
+| `install` | 启动安装器（Windows msi/exe 静默 + zip 解包自替换；Linux deb/rpm/AppImage；macOS pkg），分离进程 | 版本管理 |
 | `perform_upgrade` | 一站式升级：检测 → 验签 → 下载 → 校验 → 安装（on_stage 阶段回调） | 版本管理 |
 
 ## 使用（Tauri 集成）
@@ -59,6 +59,8 @@ fn get_machine_fingerprint() -> Result<aohoyo_native::FingerprintResult, String>
 ## 平台说明
 
 - Windows：DPAPI 加密、注册表 MachineGuid、IsDebuggerPresent、模块扫描、Global Mutex。
+- Windows 升级 zip 包：内容 = 应用安装目录完整内容（或单个主 exe），主 exe = zip 根下与包同名 exe
+  （否则根下唯一 exe）；单文件包进程内换血（下次启动生效），多文件包分离脚本整目录换血并自动重启。
 - Linux/macOS：machine-id/DMI 虚拟机检测、TracerPid、flock 文件锁、0600 文件存储（macOS 如需 Keychain 级保护请在宿主侧接入钥匙串）。
 
 ## 升级执行链（check_upgrade → install）

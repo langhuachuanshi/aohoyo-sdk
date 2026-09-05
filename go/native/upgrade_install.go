@@ -40,7 +40,8 @@ type UpgradeReport struct {
 
 // Install 启动安装器（分离进程，不等待安装完成）。返回 nil 即已启动，宿主应尽快退出。
 //
-//	Windows: .msi → msiexec /quiet；.exe → SilentArgs（默认 /SILENT）
+//	Windows: .msi → msiexec /quiet；.exe → SilentArgs（默认 /SILENT）；
+//	         .zip → 解包自替换（单文件包换血下次启动生效 / 多文件包脚本换血并自动重启，见 upgrade_zip.go）
 //	Linux:   .deb → dpkg -i / .rpm → rpm -Uvh（自动尝试 pkexec 提权）；.AppImage → 替换当前可执行文件
 //	macOS:   .pkg → installer -pkg；.dmg 场景差异大，返回错误由宿主处理
 func (n *Native) Install(installerPath string, opts *InstallOptions) error {
@@ -61,6 +62,8 @@ func (n *Native) Install(installerPath string, opts *InstallOptions) error {
 		return runDetached("msiexec", "/i", installerPath, "/quiet", "/norestart")
 	case runtime.GOOS == "windows" && ext == ".exe":
 		return runDetached(installerPath, silent)
+	case runtime.GOOS == "windows" && ext == ".zip":
+		return installZip(installerPath)
 	case runtime.GOOS == "linux" && ext == ".deb":
 		return runRoot("dpkg", "-i", installerPath)
 	case runtime.GOOS == "linux" && ext == ".rpm":

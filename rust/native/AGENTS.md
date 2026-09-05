@@ -12,7 +12,7 @@ Tauri（或任意 Rust 桌面壳）的原生模块，与平台「应用安全 + 
 ## 技术栈
 
 Rust 1.75+，crate 名 `aohoyo-native`。依赖刻意精简：serde/sha2/hmac/hex/rand/libc +
-ureq（同步 HTTP，rustls，无 tokio）+ md-5（哈希校验）。**不加 async 运行时**——桌面壳（Tauri）自带调度，
+ureq（同步 HTTP，rustls，无 tokio）+ md-5（哈希校验）+ zip（Windows zip 包解压自替换，仅 deflate 特性）。**不加 async 运行时**——桌面壳（Tauri）自带调度，
 本 crate 保持阻塞式小函数，避免传染依赖树。
 
 ## 架构
@@ -25,7 +25,8 @@ src/
 ├── sign.rs       ← DeviceSign 签名 + 升级清单 HMAC 校验
 ├── upgrade.rs    ← 升级检测（check_upgrade）+ manifest 字节级提取/验签 + exe 自检
 ├── download.rs   ← 断点续传下载 + SHA256/MD5 文件校验
-├── install.rs    ← 安装器分离启动（Win msi/exe、Linux deb/rpm/AppImage、macOS pkg）+ perform_upgrade
+├── install.rs    ← 安装器分离启动（Win msi/exe/zip、Linux deb/rpm/AppImage、macOS pkg）+ perform_upgrade
+├── zip_install.rs ← Windows zip 包解压自替换（剥壳/主 exe 识别/防 Zip Slip/换血脚本）
 ├── mutex.rs      ← 防多开
 └── secure.rs     ← DPAPI / 0600 安全存储
 ```

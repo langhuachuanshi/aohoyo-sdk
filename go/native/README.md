@@ -21,7 +21,7 @@
 | `VerifyCheckResult` | 检测结果清单签名复算（字节级 manifest，防篡改） | upgrade_signature |
 | `DownloadFile` | 安装包下载（断点续传 Range + 进度回调） | 版本管理 |
 | `VerifyFile` | 文件哈希校验（SHA256 优先 / MD5） | 版本管理 |
-| `Install` | 启动安装器（Windows msi/exe 静默；Linux deb/rpm/AppImage；macOS pkg），分离进程 | 版本管理 |
+| `Install` | 启动安装器（Windows msi/exe 静默 + zip 解包自替换；Linux deb/rpm/AppImage；macOS pkg），分离进程 | 版本管理 |
 | `PerformUpgrade` | 一站式升级：检测 → 验签 → 下载 → 校验 → 安装（OnStage 阶段回调） | 版本管理 |
 
 ## 使用（Wails 集成）
@@ -81,6 +81,8 @@ if report.InstallLaunched {
   应用未开启 upgrade_signature 时自动跳过。
 - `DownloadFile` 断点续传落 `dest+".part"`，续传被拒自动从头重下；下载不完整保留 `.part` 下次续传。
 - `Install` 静默参数默认 `/SILENT`（NSIS/Inno 兼容），可用 `InstallOptions.SilentArgs` 覆盖（如 MSI 专用场景）。
+- Windows 升级 zip 包：内容 = 应用安装目录完整内容（或单个主 exe），主 exe = zip 根下与包同名 exe
+  （否则根下唯一 exe）；单文件包进程内换血（下次启动生效），多文件包分离脚本整目录换血并自动重启。
   （anti_debug=false 等则不上报该项）；策略拉取失败不阻断上报，
   `risk_policy=block` 且有风险时返回 `*RiskBlockedError`
   （上报已完成，宿主 `errors.As` 捕获后自行决定阻断 UI）。

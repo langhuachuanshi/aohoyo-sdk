@@ -6,6 +6,11 @@
 
 ### 新增
 
+- **native Windows zip 包自更新（go/native，与 rust/native 同构）**: `Install`/`PerformUpgrade` 支持
+  `.zip` 安装包——zip 内容 = 应用安装目录完整内容（或单个主 exe）；主 exe 识别 = zip 根下与包同名
+  exe，否则根下唯一 exe；顶层唯一目录自动剥壳；条目路径安全校验防 Zip Slip。单文件包进程内换血
+  （旧 exe 留 `.old`，下次启动生效），多文件包解压 staging + 分离脚本整目录换血并自动重启。
+  标准库 archive/zip 实现，保持零三方依赖
 - **native 升级执行链（go/native，与 rust/native 同构）**: `CheckUpgrade`（POST /as/v1/upgrade/check，
   按平台取该平台最新可用版本——平台独立节奏）+ `VerifyCheckResult`（清单签名复算，字节级提取 manifest
   避免跨语言序列化差异，未开启签名自动跳过）+ `DownloadFile`（断点续传 Range + 进度回调，续传被拒自动重下）+

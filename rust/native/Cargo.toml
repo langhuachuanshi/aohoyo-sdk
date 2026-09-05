@@ -17,6 +17,8 @@ libc = "0.2"
 # 升级执行链：HTTP 客户端（同步、rustls，无 tokio）+ MD5（sha2 家族）
 ureq = "2"
 md-5 = "0.10"
+# 升级执行链：Windows zip 包解压自替换（仅 deflate，默认特性全关避免拖入无关格式）
+zip = { version = "2", default-features = false, features = ["deflate"] }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = [
