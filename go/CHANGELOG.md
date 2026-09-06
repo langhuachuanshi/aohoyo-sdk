@@ -6,6 +6,13 @@
 
 ### 新增
 
+- **native 广告模块（2026-09-06 主仓库 AD 契约）**: `GetAds`（DeviceSign 鉴权，GET 空 body 签名，
+  按广告位 code 分组返回在投广告）+ `RecordImpression` / `RecordClick`（曝光/点击上报，公开接口）。
+  对应主仓库 `docs/specs/ad.md`
+- **native 下载地址安全门**: `DownloadFile` / `PerformUpgrade` 默认仅接受 `https://` 安装包地址，
+  `Native.AllowHTTP = true` 显式放行 http（本地调试语义）；`file:`/`ftp:` 等其他 scheme 任何情况拒绝。
+  防升级清单被篡改后把包指向明文源
+
 - **native Windows zip 包自更新（go/native，与 rust/native 同构）**: `Install`/`PerformUpgrade` 支持
   `.zip` 安装包——zip 内容 = 应用安装目录完整内容（或单个主 exe）；主 exe 识别 = zip 根下与包同名
   exe，否则根下唯一 exe；顶层唯一目录自动剥壳；条目路径安全校验防 Zip Slip。单文件包进程内换血

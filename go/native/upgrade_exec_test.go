@@ -127,6 +127,7 @@ func TestDownloadFileResume(t *testing.T) {
 	dir := t.TempDir()
 	dest := filepath.Join(dir, "setup.exe")
 	n := New("demo", "secret", srv.URL)
+	n.AllowHTTP = true // httptest 为 http 明文，本地调试语义放行
 
 	// 预置半个文件 → 触发续传
 	if err := os.WriteFile(dest+".part", payload[:8], 0o644); err != nil {
@@ -163,6 +164,31 @@ func TestDownloadFileResume(t *testing.T) {
 	}
 	if full != before {
 		t.Fatal(".part 已完整时不应再发网络请求")
+	}
+}
+
+func TestDownloadURLSchemeGate(t *testing.T) {
+	n := New("demo", "secret", "")
+	dir := t.TempDir()
+
+	// 默认拒绝 http 与其他 scheme
+	for _, u := range []string{"http://cdn.example.com/a.exe", "file:///etc/passwd", "ftp://x/a.exe"} {
+		if err := n.DownloadFile(u, filepath.Join(dir, "a.exe"), 0, nil); err == nil {
+			t.Fatalf("默认应拒绝 %s", u)
+		}
+	}
+	// https 始终放行（此处不发真实请求，仅看是否通过地址门——用无效主机快速失败也算放行）
+	if err := n.DownloadFile("https://127.0.0.1:1/nope.exe", filepath.Join(dir, "b.exe"), 0, nil); err == nil {
+		t.Fatal("https 地址应通过地址门（此处应因连接失败报下载错误而非地址错误）")
+	}
+	// AllowHTTP=true 放行 http
+	n.AllowHTTP = true
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Write([]byte("ok"))
+	}))
+	defer srv.Close()
+	if err := n.DownloadFile(srv.URL+"/a.exe", filepath.Join(dir, "c.exe"), 2, nil); err != nil {
+		t.Fatalf("AllowHTTP=true 应放行 http: %v", err)
 	}
 }
 

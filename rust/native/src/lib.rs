@@ -114,6 +114,7 @@ pub struct Native {
     #[allow(dead_code)]
     base_url: String,
     cert_pin: Mutex<Option<String>>,
+    allow_http: std::sync::atomic::AtomicBool,
     mutex: Mutex<mutex::InstanceMutex>,
 }
 
@@ -129,8 +130,16 @@ impl Native {
             app_secret: app_secret.into(),
             base_url: base_url.into(),
             cert_pin: Mutex::new(None),
+            allow_http: std::sync::atomic::AtomicBool::new(false),
             mutex: Mutex::new(mutex::InstanceMutex::default()),
         }
+    }
+
+    /// 是否放行 http 明文下载地址（默认 false，仅本地调试用；生产必须保持 false）。
+    /// 语义见 download.rs check_download_url。
+    pub fn set_allow_http(&self, allow: bool) {
+        self.allow_http
+            .store(allow, std::sync::atomic::Ordering::Relaxed);
     }
 
     /// 多信号组合机器指纹（防克隆/伪造）。

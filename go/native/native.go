@@ -21,6 +21,9 @@ type Native struct {
 	AppID     string
 	AppSecret string
 	BaseURL   string
+	// AllowHTTP 放行 http 明文下载地址（默认 false，仅本地调试用；生产必须保持 false）。
+	// 语义见 upgrade_download.go checkDownloadURL。
+	AllowHTTP bool
 	certPin   string
 	httpc     *http.Client
 }

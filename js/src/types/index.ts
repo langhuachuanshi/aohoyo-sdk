@@ -5,3 +5,4 @@ export type { UpgradeCheckParams, UpgradeCheckResponse, UpgradeStrategy, AutoChe
 export type { OAuthProvider, OAuthAuthURL, OAuthUnboundInfo, OAuthCallbackResult, OAuthBinding, OAuthBindParams } from './oauth'
 export type { StatsEventType, StatsEvent, StatsConfig } from './stats'
 export type { AliyunCaptchaRegion, AliyunCaptchaInitConfig, AliyunCaptchaCallbacks } from './captcha'
+export type { AdType, AdItem, ClientAdsResponse, GetAdsParams, AdReportParams } from './ad'

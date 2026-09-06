@@ -21,7 +21,7 @@ go get github.com/langhuachuanshi/aohoyo-sdk/go
 | [`s2s`](./s2s/) | S2S 签名 + 对外存储接口客户端（Upload / GetUploadToken / Delete） | app_secret 签名 |
 | [`stats`](./stats/) | 统计事件上报（ReportEvents / ReportEvent） | 公开接口，无需签名 |
 | [`uc`](./uc/) | 用户中心 Token 验证 / 用户查询（VerifyToken / ListUsers / SearchUsers） | Bearer token 透传 |
-| [`native`](./native/) | 桌面端原生安全模块（Wails 可绑定）：机器指纹、风险检测、DeviceSign 签名、`ReportDeviceWithRisks` 风险上报、`GetSecurityConfig` 策略拉取、DPAPI 安全存储、防多开 | app_secret 仅存原生层 |
+| [`native`](./native/) | 桌面端原生安全模块（Wails 可绑定）：机器指纹、风险检测、DeviceSign 签名、`ReportDeviceWithRisks` 风险上报、`GetSecurityConfig` 策略拉取、DPAPI 安全存储、防多开、升级执行链（检测/验签/断点续传/安装/zip 自替换）、广告（`GetAds`/`RecordImpression`/`RecordClick`） | app_secret 仅存原生层 |
 
 ## 快速开始（统一入口，推荐）
 

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -16,11 +17,24 @@ import (
 // DownloadProgress 下载进度回调：received 已接收字节（含续传起点），total 总字节（未知为 0）。
 type DownloadProgress func(received, total int64)
 
+// checkDownloadURL 下载地址安全门：默认仅放行 https，防升级清单被中间层篡改后把包指向明文源。
+// AllowHTTP=true 时放行 http（本地调试）；其余 scheme（file:/ftp: 等）任何情况都拒绝。
+func (n *Native) checkDownloadURL(raw string) error {
+	u, err := url.Parse(raw)
+	if err != nil || (u.Scheme != "https" && !(n.AllowHTTP && u.Scheme == "http")) {
+		return fmt.Errorf("拒绝非 https 下载地址（本地调试可置 AllowHTTP=true）")
+	}
+	return nil
+}
+
 // DownloadFile 下载安装包到 destPath，断点续传（destPath+".part" 已有内容时发 Range 续传）。
 // expectedSize 传服务端 file_size 用于完整性校验；onProgress 可为 nil。
 func (n *Native) DownloadFile(url, destPath string, expectedSize int64, onProgress DownloadProgress) error {
 	if url == "" {
 		return fmt.Errorf("下载地址为空")
+	}
+	if err := n.checkDownloadURL(url); err != nil {
+		return err
 	}
 	partPath := destPath + ".part"
 

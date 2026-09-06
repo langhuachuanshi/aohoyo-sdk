@@ -145,6 +145,11 @@ export class SdkClient {
     return this.http.post(url, data, { headers }).then(r => this.unwrap<T>(r))
   }
 
+  /** GET 请求（带自定义请求头，用于设备签名等场景） */
+  getWithHeaders<T>(url: string, params?: Record<string, any>, headers?: Record<string, string>): Promise<T> {
+    return this.http.get(url, { params, headers }).then(r => this.unwrap<T>(r))
+  }
+
   /** 上传文件（multipart/form-data，由 axios 自动设置 boundary） */
   upload<T>(url: string, formData: FormData): Promise<T> {
     return this.http.post(url, formData).then(r => this.unwrap<T>(r))

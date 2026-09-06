@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+### 新增
+
+- **ads 广告模块（2026-09-06 主仓库 AD 契约）**: `getAds`（拉取在投广告，按广告位 code 分组；登录走
+  JWT、免登录自动 DeviceSign——GET 空 body 参与签名）+ `reportImpression` / `reportClick`（曝光/点击上报，
+  公开接口自动带 device_id）。类型 `AdItem` / `ClientAdsResponse` / `AdType` 等（`types/ad.ts`）。
+  `SdkClient` 底层新增 `getWithHeaders` 支撑签名 GET
+
 ### 变更
 
 - **upgrade 模块契约对齐（2026-09-04 主仓库升级链路定稿）**: `UpgradeCheckResponse` 新增可选 `signature`

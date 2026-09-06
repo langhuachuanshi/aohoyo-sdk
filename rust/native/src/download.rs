@@ -11,6 +11,17 @@ use std::path::Path;
 pub type ProgressFn<'a> = dyn FnMut(u64, u64) + 'a;
 
 impl Native {
+    /// 下载地址安全门：默认仅放行 https，防升级清单被中间层篡改后把包指向明文源。
+    /// set_allow_http(true) 后放行 http（本地调试）；其余 scheme（file:/ftp: 等）任何情况都拒绝。
+    fn check_download_url(&self, url: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let allow_http = self.allow_http.load(std::sync::atomic::Ordering::Relaxed);
+        if url.starts_with("https://") || (allow_http && url.starts_with("http://")) {
+            Ok(())
+        } else {
+            Err("拒绝非 https 下载地址（本地调试可 set_allow_http(true)）".into())
+        }
+    }
+
     /// 下载安装包到 `dest`，断点续传（`dest.part` 已有内容时发 Range 续传，续传被拒则重下）。
     /// `expected_size` 传服务端 file_size；`progress` 可为 None。
     pub fn download_file(
@@ -23,6 +34,7 @@ impl Native {
         if url.is_empty() {
             return Err("下载地址为空".into());
         }
+        self.check_download_url(url)?;
         let part = format!("{dest}.part");
 
         let mut offset: u64 = 0;

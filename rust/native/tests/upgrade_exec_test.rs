@@ -114,6 +114,7 @@ fn test_download_resume() {
     // 预置半个文件 → 触发续传
     std::fs::write(dest.with_extension("part_test.part"), &payload[..8]).unwrap();
     let n = Native::new("demo", "s", &base);
+    n.set_allow_http(true); // tiny_http 为 http 明文，本地调试语义放行
     let mut progress_calls = 0;
     let dest_str = dest.to_string_lossy().to_string();
     n.download_file(&base, &dest_str, payload.len() as u64, Some(&mut |_r, _t| progress_calls += 1))
@@ -123,6 +124,42 @@ fn test_download_resume() {
     assert_eq!(got, payload, "续传拼接结果应等于完整文件");
     assert!(!dest.with_extension("part_test.part").exists(), "完成后 .part 应被 rename");
     assert!(progress_calls > 0, "进度回调应被调用");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn test_download_url_scheme_gate() {
+    let n = Native::new("demo", "s", "");
+    let dir = std::env::temp_dir().join(format!("aohoyo_gate_{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let dest = dir.join("a.exe").to_string_lossy().to_string();
+
+    // 默认拒绝 http 与其他 scheme
+    for url in ["http://cdn.example.com/a.exe", "file:///etc/passwd", "ftp://x/a.exe"] {
+        assert!(n.download_file(url, &dest, 0, None).is_err(), "默认应拒绝 {url}");
+    }
+    // https 通过地址门（连不上也应报连接错误而非地址门错误）
+    let err = n
+        .download_file("https://127.0.0.1:1/nope.exe", &dest, 0, None)
+        .unwrap_err()
+        .to_string();
+    assert!(!err.contains("拒绝非 https"), "https 应通过地址门，实际报错: {err}");
+
+    // set_allow_http(true) 后放行 http
+    n.set_allow_http(true);
+    let payload = "ok";
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let addr = listener.local_addr().unwrap();
+    let server = Server::from_listener(listener, None).unwrap();
+    let pl = payload.to_string();
+    thread::spawn(move || {
+        if let Ok(req) = server.recv() {
+            let _ = req.respond(Response::from_data(pl.into_bytes()));
+        }
+    });
+    n.download_file(&format!("http://{addr}/a.exe"), &dest, payload.len() as u64, None)
+        .unwrap();
 
     let _ = std::fs::remove_dir_all(&dir);
 }

@@ -5,7 +5,7 @@
 
 Aohoyo 前端 SDK，封装用户中心（UC 认证/资料/菜单）与管理服务（AS 设备/统计/升级/验证码/反馈）的客户端 API。供 **Web / 桌面端（Tauri/Wails/Electron）/ 移动端** 应用集成，通过 JWT Bearer Token 认证。
 
-> 当前版本 v0.9.0。接口路由为服务前缀制：UC `/uc/v1/*`、AS `/as/v1/*`（`baseURL` 不带 `/api`）。
+> 当前版本 v0.10.0。接口路由为服务前缀制：UC `/uc/v1/*`、AS `/as/v1/*`（`baseURL` 不带 `/api`）。
 
 ## 安装
 
@@ -111,6 +111,7 @@ await sdk.user.changePhone({ phone: newPhone, code: newCode, old_code: oldCode }
 | `stats` | `sdk.stats` | 统计上报（自动 + trackPageView/trackEvent） |
 | `storage` | `sdk.storage` | 头像上传 |
 | `feedback` | `sdk.feedback` | 用户反馈（登录 JWT / 免登录 DeviceSign） |
+| `ads` | `sdk.ads` | 广告拉取（按广告位分组）+ 曝光/点击上报（登录 JWT / 免登录 DeviceSign 自动切换） |
 
 ### SdkClient
 
@@ -122,6 +123,25 @@ await sdk.user.changePhone({ phone: newPhone, code: newCode, old_code: oldCode }
 | `appId` / `deviceId` / `deviceInfo` | 应用与设备标识 |
 | `sessionId` / `userId` | 统计口径共享的会话/用户 ID |
 | `isLoggedIn` | 是否已登录 |
+
+## 客户端广告（AD）
+
+```ts
+// 拉取在投广告（按广告位 code 分组）；登录走 JWT，免登录自动 DeviceSign（GET 空 body 签名）
+const ads = await sdk.ads.getAds({ position: 'splash' })   // position 省略 = 全部启用广告位
+const item = ads.positions.splash?.[0]
+
+if (item) {
+  await sdk.ads.reportImpression(item.id)   // 渲染后上报曝光
+  onClick(async () => {
+    await sdk.ads.reportClick(item.id)      // 点击先上报再跳转
+    window.open(item.link_url)
+  })
+}
+```
+
+> `ad_type` 决定渲染形态（1=文字 2=图片 3=弹窗 4=开屏 5=横幅），宽高建议值来自广告位配置。
+> 完整契约见主仓库 `docs/specs/ad.md`。
 
 ## 开发
 

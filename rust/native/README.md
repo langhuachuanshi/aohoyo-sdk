@@ -17,7 +17,7 @@
 | `set_cert_pin/get_cert_pin` | TLS 证书固定 pin 存取 | cert_pin |
 | `check_upgrade` | 升级检测（POST /as/v1/upgrade/check，按平台取该平台最新可用版本） | 版本管理 |
 | `verify_check_result` | 检测结果清单签名复算（字节级 manifest，防篡改） | upgrade_signature |
-| `download_file` | 安装包下载（断点续传 Range + 进度回调） | 版本管理 |
+| `download_file` | 安装包下载（断点续传 Range + 进度回调）。**仅接受 https 地址**，`set_allow_http(true)` 才放行 http（本地调试） | 版本管理 |
 | `verify_file` | 文件哈希校验（SHA256 优先 / MD5） | 版本管理 |
 | `install` | 启动安装器（Windows msi/exe 静默 + zip 解包自替换；Linux deb/rpm/AppImage；macOS pkg），分离进程 | 版本管理 |
 | `perform_upgrade` | 一站式升级：检测 → 验签 → 下载 → 校验 → 安装（on_stage 阶段回调） | 版本管理 |
@@ -102,4 +102,6 @@ fn perform_upgrade(native: tauri::State<'_, Native>) -> Result<String, String> {
 - `verify_check_result` 用服务端响应**原始字节**（删 signature 尾段）复算 HMAC，跨语言无序列化差异；
   应用未开启 upgrade_signature 时自动跳过。
 - `download_file` 断点续传落 `dest.part`，续传被拒自动从头重下；下载不完整保留 `.part` 下次续传。
+- **下载地址安全门**：非 `https://` 的安装包地址默认拒绝（防清单篡改导向明文源），`set_allow_http(true)`
+  显式放开 http 仅供本地调试；`file:`/`ftp:` 等其他 scheme 任何情况都拒绝。
 - `install` 静默参数默认 `/SILENT`（NSIS/Inno 兼容），`InstallOptions.silent_args` 可覆盖。
