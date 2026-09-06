@@ -30,6 +30,7 @@ type CheckResult struct {
 	MD5               string `json:"md5"`
 	SHA256            string `json:"sha256"`
 	UpdateLog         string `json:"update_log"`
+	MirrorDownloadURL string `json:"mirror_download_url"` // 镜像解析端点（302 直链或回退主源）；未镜像为空
 	Signature         string `json:"signature,omitempty"` // 应用开启 upgrade_signature 时返回
 
 	// RawManifest 服务端响应 data 的原始 JSON（已删 signature 尾段）。

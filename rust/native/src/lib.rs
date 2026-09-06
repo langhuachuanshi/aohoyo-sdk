@@ -72,6 +72,9 @@ pub struct CheckResult {
     pub md5: String,
     pub sha256: String,
     pub update_log: String,
+    /// 镜像解析端点 URL（302 直链或回退主源）；未镜像/服务端未配置为空，下载候选链用
+    #[serde(default)]
+    pub mirror_download_url: String,
     #[serde(default)]
     pub signature: String,
     /// 服务端响应 data 的原始 JSON（已删 signature 尾段），verify_check_result 用它复算 HMAC

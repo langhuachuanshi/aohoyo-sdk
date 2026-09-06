@@ -2,9 +2,7 @@
 
 本文件记录 sdk/server-go 的所有变更。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
-## [Unreleased]
-
-### 新增
+- **CheckResult 新增 `MirrorDownloadURL`（UPG-1 镜像契约）**: 镜像解析端点（302 直链或回退主源），未镜像为空；下载候选链消费待蓝奏云接入后落地
 
 - **native 广告模块（2026-09-06 主仓库 AD 契约）**: `GetAds`（DeviceSign 鉴权，GET 空 body 签名，
   按广告位 code 分组返回在投广告）+ `RecordImpression` / `RecordClick`（曝光/点击上报，公开接口）。

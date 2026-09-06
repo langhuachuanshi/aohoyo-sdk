@@ -28,6 +28,8 @@ export interface UpgradeCheckResponse {
   file_size: number
   md5: string
   sha256: string
+  /** 镜像解析端点 URL（302 直链或回退主源）；未镜像/服务端未配置为空。桌面端下载候选链用，JS 仅透传 */
+  mirror_download_url?: string
   /**
    * 清单 HMAC-SHA256 签名（应用开启 upgrade_signature 时返回）。
    * JS 层仅透传——app_secret 不下发 WebView，验签由宿主原生层（rust verify_upgrade / go VerifyUpgrade）完成。
