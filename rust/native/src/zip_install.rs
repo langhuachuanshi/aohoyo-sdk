@@ -55,7 +55,10 @@ pub(crate) fn install_zip(zip_path: &str) -> Result<(), Box<dyn std::error::Erro
 
         // 单文件 zip：进程内换血（Windows 允许重命名运行中的 exe），无需脚本
         if is_single_file_package(Path::new(&staging)) {
-            let new_exe = staging.join(&exe_rel).to_string_lossy().to_string();
+            let new_exe = Path::new(&staging)
+                .join(&exe_rel)
+                .to_string_lossy()
+                .to_string();
             if let Err(e) = super::install::replace_self(&new_exe) {
                 let _ = std::fs::remove_dir_all(&staging);
                 return Err(e);

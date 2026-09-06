@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-09-06
+
+### 修复
+
+- **Windows 编译错误**: `zip_install.rs` 单文件包换血路径 `staging`（String）误调 `Path::join`，
+  Linux 下位于 cfg(windows) 块外不可见导致漏检；改为 `Path::new(&staging).join(...)`
+
 ## [0.1.0] - 2026-09-06（首个 tag）
 
 ### 新增
