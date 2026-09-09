@@ -2,7 +2,17 @@
 
 本文件记录 sdk-js 的所有变更。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [Unreleased]
+
+## [0.10.1] - 2026-09-09
+
+### 新增
+
 - **CheckResponse 新增可选 `mirror_download_url`（UPG-1 镜像契约）**: 镜像解析端点 URL（302 直链或回退主源），未镜像/服务端未配置为空；JS 仅透传，桌面端原生层据此排下载候选链
+
+## [0.10.0] - 2026-09-06
+
+### 新增
 
 - **ads 广告模块（2026-09-06 主仓库 AD 契约）**: `getAds`（拉取在投广告，按广告位 code 分组；登录走
   JWT、免登录自动 DeviceSign——GET 空 body 参与签名）+ `reportImpression` / `reportClick`（曝光/点击上报，
