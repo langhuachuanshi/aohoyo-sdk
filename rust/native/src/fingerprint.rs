@@ -45,7 +45,7 @@ fn is_valid_serial(v: &str) -> bool {
 fn read_hw_signals() -> HashMap<String, String> {
     let mut out_map = HashMap::new();
     let script = "(Get-CimInstance Win32_BaseBoard).SerialNumber;                   (Get-CimInstance Win32_BIOS).SerialNumber;                   (Get-CimInstance Win32_Processor | Select-Object -First 1).ProcessorId;                   (Get-CimInstance Win32_VideoController | Sort-Object Name | ForEach-Object Name) -join '|';                   (Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum).Sum";
-    let out = match std::process::Command::new("powershell")
+    let stdout = match std::process::Command::new("powershell")
         .args(["-NoProfile", "-Command", script])
         .output()
     {
@@ -64,7 +64,8 @@ fn read_hw_signals() -> HashMap<String, String> {
     insert(&mut out_map, "bios_serial", pick(1));
     insert(&mut out_map, "cpu_id", pick(2));
     // 显卡：过滤驱动未装时的软件渲染占位；多卡按名排序拼接（装/换卡 → 指纹变）
-    let gpu: Vec<&str> = pick(3)
+    let gpu_line = pick(3);
+    let gpu: Vec<&str> = gpu_line
         .split('|')
         .filter(|g| !g.is_empty() && !g.to_ascii_lowercase().contains("microsoft basic display"))
         .collect();
