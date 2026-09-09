@@ -8,7 +8,10 @@
 
 ### 变更
 
-- **指纹哈希改 MD5（32 位 hex）**: 与 rust/native 同步（64 位过长）；旧指纹失效需重绑
+- **指纹 v4——全硬件信号 + 注册表直读（⚠️ 旧指纹全部失效，绑定需重绑）**:
+  ① 性能：弃用 PowerShell/WMI（2~5s），改注册表 RegGetValueW + GetPhysicallyInstalledSystemMemory
+  直读（毫秒级）② 信号：MachineGuid + hostname + 主板/BIOS 序列号 + CPU Identifier + 显卡
+  DriverDesc 列表 + 物理内存字节 ③ 哈希改 MD5（32 位）。与 rust/native 严格同步
 
 ## [1.2.2] - 2026-09-10
 

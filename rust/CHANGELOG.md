@@ -4,12 +4,16 @@
 
 ## [Unreleased]
 
-## [0.3.4] - 2026-09-10
+## [0.4.0] - 2026-09-10
 
 ### 变更
 
-- **指纹哈希改 MD5（32 位 hex）**: 64 位 SHA256 对设备标识过长（用户可读性优先；
-  非安全场景，碰撞风险可接受）。⚠️ 算法切换后旧指纹全部失效，绑定需重绑
+- **指纹 v4——全硬件信号 + 注册表/系统 API 直读（⚠️ 旧指纹全部失效，绑定需重绑）**:
+  ① 性能：弃用 PowerShell/WMI（2~5s），改注册表 RegGetValueW + GetPhysicallyInstalledSystemMemory
+  直读（毫秒级）② 信号：MachineGuid + hostname + 主板/BIOS 序列号（BIOS 键）+ CPU Identifier +
+  显卡 DriverDesc 列表（枚举显示类子键，过滤驱动未装占位）+ 物理内存字节
+  ③ 哈希改 MD5（32 位 hex，用户可读性优先；非安全场景）
+  与 go/native fingerprint_windows.go 严格同步
 
 ## [0.3.2] - 2026-09-10
 

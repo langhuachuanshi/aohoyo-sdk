@@ -18,6 +18,7 @@ var (
 	procRegOpenKeyExW      = advapi32.NewProc("RegOpenKeyExW")
 	procRegQueryValueExW   = advapi32.NewProc("RegQueryValueExW")
 	procRegCloseKey        = advapi32.NewProc("RegCloseKey")
+	procGetPhysicallyInstalledSystemMemory = kernel32.NewProc("GetPhysicallyInstalledSystemMemory")
 	procOpenProcessToken   = advapi32.NewProc("OpenProcessToken")
 	procGetTokenInformation = advapi32.NewProc("GetTokenInformation")
 

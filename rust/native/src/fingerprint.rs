@@ -1,4 +1,4 @@
-//! 机器指纹：多信号组合哈希（排序后 SHA256）。
+//! 机器指纹：多硬件信号组合哈希（排序后 MD5，32 位）。Windows 走注册表/系统 API 直读（毫秒级）。
 
 use crate::FingerprintResult;
 use md5::Md5;
@@ -40,49 +40,64 @@ fn is_valid_serial(v: &str) -> bool {
         )
 }
 
-/// PowerShell 一次调用取全部硬件信号（带标签 k=v 输出，空实例输出空值不占行位错乱）。
-/// 信号：主板/BIOS 序列号、CPU ProcessorId、显卡名列表（排序 | 拼接）、内存总容量字节。
-/// 零三方依赖；本机调用约 1s，指纹仅启动算一次。
+/// 注册表直读值（RegGetValueW，毫秒级）。键不存在/类型不符返回 None。
 #[cfg(windows)]
-fn read_hw_signals() -> HashMap<String, String> {
-    let mut out_map = HashMap::new();
-    let script = "(Get-CimInstance Win32_BaseBoard).SerialNumber;                   (Get-CimInstance Win32_BIOS).SerialNumber;                   (Get-CimInstance Win32_Processor | Select-Object -First 1).ProcessorId;                   (Get-CimInstance Win32_VideoController | Sort-Object Name | ForEach-Object Name) -join '|';                   (Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum).Sum";
-    let stdout = match std::process::Command::new("powershell")
-        .args(["-NoProfile", "-Command", script])
-        .output()
-    {
-        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout).to_string(),
-        _ => return out_map,
+fn reg_get_string(subkey: &str, value: &str) -> Option<String> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::System::Registry::{RegGetValueW, HKEY, HKEY_LOCAL_MACHINE, KEY_READ, RRF_RT_REG_SZ};
+    let sub_w: Vec<u16> = std::ffi::OsStr::new(subkey).encode_wide().chain([0]).collect();
+    let val_w: Vec<u16> = std::ffi::OsStr::new(value).encode_wide().chain([0]).collect();
+    let mut size: u32 = 0;
+    let mut buf: Vec<u16>;
+    // 先取长度再取数据
+    let r = unsafe {
+        RegGetValueW(HKEY_LOCAL_MACHINE as HKEY, sub_w.as_ptr(), val_w.as_ptr(), RRF_RT_REG_SZ,
+                     std::ptr::null_mut(), std::ptr::null_mut(), &mut size)
     };
-    // 无标签场景：按行序对应 [board, bios, cpu, gpu, ram]；空实例产生空行，用行序容错
-    let rows: Vec<&str> = stdout.lines().map(|l| l.trim()).collect();
-    let pick = |i: usize| rows.get(i).copied().unwrap_or("").to_string();
-    let insert = |map: &mut HashMap<String, String>, k: &str, v: String| {
-        if is_valid_serial(&v) {
-            map.insert(k.into(), v);
-        }
+    if r != 0 || size == 0 {
+        return None;
+    }
+    buf = vec![0u16; size as usize / 2 + 1];
+    let r = unsafe {
+        RegGetValueW(HKEY_LOCAL_MACHINE as HKEY, sub_w.as_ptr(), val_w.as_ptr(), RRF_RT_REG_SZ,
+                     std::ptr::null_mut(), buf.as_mut_ptr() as *mut core::ffi::c_void, &mut size)
     };
-    insert(&mut out_map, "board_serial", pick(0));
-    insert(&mut out_map, "bios_serial", pick(1));
-    insert(&mut out_map, "cpu_id", pick(2));
-    // 显卡：过滤驱动未装时的软件渲染占位；多卡按名排序拼接（装/换卡 → 指纹变）
-    let gpu_line = pick(3);
-    let gpu: Vec<&str> = gpu_line
-        .split('|')
-        .filter(|g| !g.is_empty() && !g.to_ascii_lowercase().contains("microsoft basic display"))
-        .collect();
-    if !gpu.is_empty() {
-        let mut g = gpu.join("|");
-        g.make_ascii_lowercase();
-        out_map.insert("gpu_names".into(), g);
+    if r != 0 {
+        return None;
     }
-    // 内存：总容量字节（加/换内存条 → 指纹变）
-    if let Ok(bytes) = pick(4).parse::<u64>() {
-        if bytes > 0 {
-            out_map.insert("ram_bytes".into(), bytes.to_string());
+    let end = buf.iter().position(|&c| c == 0).unwrap_or(buf.len());
+    let text = String::from_utf16_lossy(&buf[..end]);
+    let t = text.trim();
+    if t.is_empty() { None } else { Some(t.to_string()) }
+}
+
+/// 物理内存字节（GetPhysicallyInstalledSystemMemory，SMBIOS 口径，毫秒级）。
+#[cfg(windows)]
+fn physical_memory_bytes() -> Option<u64> {
+    use windows_sys::Win32::System::SystemInformation::GetPhysicallyInstalledSystemMemory;
+    let mut kb: u64 = 0;
+    let r = unsafe { GetPhysicallyInstalledSystemMemory(&mut kb) };
+    if r != 0 && kb > 0 {
+        Some(kb * 1024)
+    } else {
+        None
+    }
+}
+
+/// 显卡名列表：枚举显示适配器类子键 0000~0031 的 DriverDesc（毫秒级）。
+#[cfg(windows)]
+fn read_gpu_names() -> Option<String> {
+    let class = r"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}";
+    let mut names: Vec<String> = Vec::new();
+    for i in 0..32 {
+        if let Some(desc) = reg_get_string(&format!("{class}\\{i:04}"), "DriverDesc") {
+            let lower = desc.to_ascii_lowercase();
+            if !lower.contains("microsoft basic display") {
+                names.push(lower);
+            }
         }
     }
-    out_map
+    if names.is_empty() { None } else { Some(names.join("|")) }
 }
 
 #[cfg(windows)]
@@ -98,11 +113,20 @@ pub fn machine_fingerprint() -> Result<FingerprintResult, Box<dyn std::error::Er
             fields.insert("hostname".into(), h);
         }
     }
-    // 指纹 v3（2026-09-10）：主板/BIOS/CPU/显卡/内存 全硬件信号。读不到/厂商占位值则跳过
-    //（字段集确定性由「硬件配置不变 → 读数不变」保证；与 go/native 严格同步）。
-    for (k, v) in read_hw_signals() {
-        fields.insert(k, v);
-    }
+    // 指纹 v4（2026-09-10）：全硬件信号改注册表/系统 API 直读（毫秒级，不再走 PowerShell/WMI）。
+    let insert = |fields: &mut HashMap<String, String>, k: &str, v: Option<String>| {
+        if let Some(v) = v {
+            if is_valid_serial(&v) {
+                fields.insert(k.into(), v);
+            }
+        }
+    };
+    let bios_key = r"HARDWARE\DESCRIPTION\System\BIOS";
+    insert(&mut fields, "board_serial", reg_get_string(&format!("{bios_key}\\BaseBoardSerialNumber"), ""));
+    insert(&mut fields, "bios_serial", reg_get_string(&format!("{bios_key}\\SystemSerialNumber"), ""));
+    insert(&mut fields, "cpu_identifier", reg_get_string(r"HARDWARE\DESCRIPTION\System\CentralProcessor\0", "Identifier"));
+    insert(&mut fields, "gpu_names", read_gpu_names());
+    insert(&mut fields, "ram_bytes", physical_memory_bytes().map(|b| b.to_string()));
     let hash = combine_hash(&fields);
     Ok(FingerprintResult { hash, fields })
 }
