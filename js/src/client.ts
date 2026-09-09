@@ -106,6 +106,11 @@ export class SdkClient {
     )
   }
 
+  /** 暴露 axios 实例（宿主可挂日志拦截器做请求/响应可视化调试） */
+  get httpInstance(): AxiosInstance {
+    return this.http
+  }
+
   /** 获取存储实例 */
   private getStorage() {
     return this.config.storage ?? (typeof localStorage !== 'undefined' ? localStorage : undefined)
