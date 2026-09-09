@@ -2,15 +2,29 @@
 
 本文件记录 sdk/server-go 的所有变更。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
-- **CheckResult 新增 `MirrorDownloadURL`（UPG-1 镜像契约）**: 镜像解析端点（302 直链或回退主源），未镜像为空；下载候选链消费待蓝奏云接入后落地
+## [Unreleased]
 
+## [1.2.1] - 2026-09-10
+
+### 修复
+
+- **机器指纹算法对齐 rust/native（契约统一，⚠️ hash 会变）**: Windows 从 MachineGuid+MAC 改为
+  MachineGuid+hostname（MAC 随网卡/虚拟网卡漂移且与 rust 端不一致）；非 Windows 从
+  machine-id+hostname+MAC 对齐为 machine-id+product_uuid（皆空退 hostname）。
+  拼接哈希（排序 k=v; → SHA256 hex）两端本就同构。
+  升级后同一台设备的指纹值会变化——已绑定指纹的授权/设备记录需重新绑定
+
+## [1.2.0] - 2026-09-06
+
+### 新增
+
+- **CheckResult 新增 `MirrorDownloadURL`（UPG-1 镜像契约）**: 镜像解析端点（302 直链或回退主源），未镜像为空；下载候选链消费待蓝奏云接入后落地
 - **native 广告模块（2026-09-06 主仓库 AD 契约）**: `GetAds`（DeviceSign 鉴权，GET 空 body 签名，
   按广告位 code 分组返回在投广告）+ `RecordImpression` / `RecordClick`（曝光/点击上报，公开接口）。
   对应主仓库 `docs/specs/ad.md`
 - **native 下载地址安全门**: `DownloadFile` / `PerformUpgrade` 默认仅接受 `https://` 安装包地址，
   `Native.AllowHTTP = true` 显式放行 http（本地调试语义）；`file:`/`ftp:` 等其他 scheme 任何情况拒绝。
   防升级清单被篡改后把包指向明文源
-
 - **native Windows zip 包自更新（go/native，与 rust/native 同构）**: `Install`/`PerformUpgrade` 支持
   `.zip` 安装包——zip 内容 = 应用安装目录完整内容（或单个主 exe）；主 exe 识别 = zip 根下与包同名
   exe，否则根下唯一 exe；顶层唯一目录自动剥壳；条目路径安全校验防 Zip Slip。单文件包进程内换血
@@ -21,7 +35,6 @@
   避免跨语言序列化差异，未开启签名自动跳过）+ `DownloadFile`（断点续传 Range + 进度回调，续传被拒自动重下）+
   `VerifyFile`（SHA256 优先/MD5）+ `Install`（Windows msi/exe 静默、Linux deb/rpm/AppImage 自替换、macOS pkg，
   分离进程启动）+ `PerformUpgrade` 一站式（OnStage 阶段回调）。契约对齐主仓库 upgrade-integration.md（2026-09-04 定稿）
-
 ## [1.1.0] - 2026-09-03
 
 > 首个包含 desktop-native（go/native）的发布版本。版本号承接 go/v1.0.0
