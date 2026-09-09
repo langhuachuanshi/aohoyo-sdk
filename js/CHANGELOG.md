@@ -4,6 +4,15 @@
 
 ## [Unreleased]
 
+## [0.10.3] - 2026-09-10
+
+### 修复
+
+- **DeviceVerifyResponse 字段修正**: 服务端 `devices/verify` 实际响应 `{ safe, risk_type }`，
+  旧类型 `is_safe` 为笔误导致宿主封禁判断永不触发；`safe`/`status` 改为可选（与实际响应对齐）
+
+
+
 ## [0.10.2] - 2026-09-10
 
 ### 新增

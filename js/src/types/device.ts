@@ -64,12 +64,15 @@ export interface DeviceVerifyParams {
 
 /** 设备验证响应 */
 export interface DeviceVerifyResponse {
-  device_id: string
-  /** 1=正常 2=封禁 3=观察 */
-  status: number
+  device_id?: string
+  /** 2=封禁（存在该字段时以它为准） */
+  status?: number
   /** 0=正常 1=模拟器 2=多开 3=Root 4=Hook 5=异常签名 */
-  risk_type: number
-  is_safe: boolean
+  risk_type?: number
+  /** 服务端实际响应字段（devices/verify）：false = 设备被封禁 */
+  safe?: boolean
+  /** @deprecated 旧类型笔误，服务端字段为 safe */
+  is_safe?: boolean
 }
 
 /**
