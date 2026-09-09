@@ -20,6 +20,45 @@ fn combine_hash(fields: &HashMap<String, String>) -> String {
 }
 
 #[cfg(windows)]
+/// 无效序列号黑名单（厂商占位值），命中即视为无此信号。
+fn is_valid_serial(v: &str) -> bool {
+    let t = v.trim().to_ascii_lowercase();
+    !t.is_empty()
+        && !matches!(
+            t.as_str(),
+            "none"
+                | "default"
+                | "default string"
+                | "to be filled by o.e.m."
+                | "system serial number"
+                | "serial number"
+                | "0"
+                | "000"
+                | "000000000"
+        )
+}
+
+/// PowerShell 一次调用取主板/BIOS 序列号（零三方依赖；本机调用约 0.5s，指纹仅启动算一次）。
+#[cfg(windows)]
+fn read_hw_serials() -> (Option<String>, Option<String>) {
+    let out = std::process::Command::new("powershell")
+        .args(["-NoProfile", "-Command",
+               "(Get-CimInstance Win32_BaseBoard).SerialNumber; (Get-CimInstance Win32_BIOS).SerialNumber"])
+        .output();
+    let stdout = match out {
+        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout).to_string(),
+        _ => return (None, None),
+    };
+    let mut lines = stdout.lines().map(|l| l.trim()).filter(|l| !l.is_empty());
+    let board = lines.next().map(|s| s.to_string());
+    let bios = lines.next().map(|s| s.to_string());
+    (
+        board.filter(|v| is_valid_serial(v)),
+        bios.filter(|v| is_valid_serial(v)),
+    )
+}
+
+#[cfg(windows)]
 pub fn machine_fingerprint() -> Result<FingerprintResult, Box<dyn std::error::Error>> {
     let mut fields = HashMap::new();
     if let Ok(guid) = super::risks::read_machine_guid() {
@@ -31,6 +70,15 @@ pub fn machine_fingerprint() -> Result<FingerprintResult, Box<dyn std::error::Er
         if !h.is_empty() {
             fields.insert("hostname".into(), h);
         }
+    }
+    // 指纹 v2（2026-09-10）：补硬件级信号。读不到/厂商占位值则跳过（字段集确定性由
+    // 「硬件不变 → 读数不变」保证；注意与 go/native fingerprint_windows.go 严格同步）。
+    let (board, bios) = read_hw_serials();
+    if let Some(b) = board {
+        fields.insert("board_serial".into(), b);
+    }
+    if let Some(b) = bios {
+        fields.insert("bios_serial".into(), b);
     }
     let hash = combine_hash(&fields);
     Ok(FingerprintResult { hash, fields })
