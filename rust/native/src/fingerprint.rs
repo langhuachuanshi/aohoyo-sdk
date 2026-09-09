@@ -1,7 +1,8 @@
 //! 机器指纹：多信号组合哈希（排序后 SHA256）。
 
 use crate::FingerprintResult;
-use sha2::{Digest, Sha256};
+use md5::Md5;
+use md5::Digest;
 use std::collections::HashMap;
 
 fn combine_hash(fields: &HashMap<String, String>) -> String {
@@ -14,7 +15,8 @@ fn combine_hash(fields: &HashMap<String, String>) -> String {
         sb.push_str(&fields[k]);
         sb.push(';');
     }
-    let mut hasher = Sha256::new();
+    // 指纹标识用 MD5（32 位 hex，用户可读性优先；非安全场景，碰撞风险可接受）
+    let mut hasher = Md5::new();
     hasher.update(sb.as_bytes());
     hex::encode(hasher.finalize())
 }

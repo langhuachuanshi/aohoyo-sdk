@@ -3,7 +3,7 @@
 package native
 
 import (
-	"crypto/sha256"
+	"crypto/md5"
 	"encoding/hex"
 	"net"
 	"os"
@@ -91,7 +91,8 @@ func readHwSignals() map[string]string {
 	return out
 }
 
-// combineHash 按 key 排序拼接 "k=v;" 段后 SHA256 hex——与 rust combine_hash 同构。
+// combineHash 按 key 排序拼接 "k=v;" 段后 MD5 hex（32 位）——与 rust combine_hash 同构。
+// 指纹标识用 MD5（用户可读性优先；非安全场景，碰撞风险可接受）。
 func combineHash(fields map[string]string) string {
 	keys := make([]string, 0, len(fields))
 	for k := range fields {
@@ -105,7 +106,7 @@ func combineHash(fields map[string]string) string {
 		sb.WriteString(fields[k])
 		sb.WriteByte(';')
 	}
-	sum := sha256.Sum256([]byte(sb.String()))
+	sum := md5.Sum([]byte(sb.String()))
 	return hex.EncodeToString(sum[:])
 }
 
