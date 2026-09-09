@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-09-10
+
+### 新增
+
+- **指纹缓存 API（宿主可选）**: `machine_fingerprint_cached(cache_dir)`（命中毫秒级返回，
+  未命中真算并写缓存，含算法版本号 `FINGERPRINT_ALGO` 自动失效）+
+  `machine_fingerprint_refreshed(cache_dir)`（强制重算并更新缓存）。缓存/后台刷新调度由宿主负责
+
 ## [0.4.0] - 2026-09-10
 
 ### 变更

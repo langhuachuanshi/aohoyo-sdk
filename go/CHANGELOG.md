@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+## [1.2.6] - 2026-09-10
+
+### 新增
+
+- **指纹缓存 API（宿主可选，与 rust 同构）**: `MachineFingerprintCached(cacheDir)` +
+  `MachineFingerprintRefreshed(cacheDir)`，含算法版本号 `FingerprintAlgo` 自动失效
+
 ## [1.2.4] - 2026-09-10
 
 ### 变更

@@ -159,3 +159,56 @@ pub fn machine_fingerprint() -> Result<FingerprintResult, Box<dyn std::error::Er
     let hash = combine_hash(&fields);
     Ok(FingerprintResult { hash, fields })
 }
+
+// ---------- 缓存层（宿主可选）：启动毫秒级 + 后台刷新由宿主调度 ----------
+
+/// 指纹算法版本号——写入缓存，算法/字段变更时递增使旧缓存自动失效。
+pub const FINGERPRINT_ALGO: &str = "fp-v4-md5";
+const CACHE_FILE: &str = "fingerprint.cache";
+
+/// 带缓存的指纹：cache_dir 下命中（算法版本一致）直接返回（毫秒级）；
+/// 未命中/版本不符/损坏 → 真算并写缓存。
+/// 返回 (指纹, 是否来自缓存)。宿主可另用 machine_fingerprint() 真算比对（换硬件检出），
+/// 或 machine_fingerprint_refreshed() 强制重算并更新缓存。
+pub fn machine_fingerprint_cached(
+    cache_dir: &std::path::Path,
+) -> Result<(FingerprintResult, bool), Box<dyn std::error::Error>> {
+    let path = cache_dir.join(CACHE_FILE);
+    if let Ok(text) = std::fs::read_to_string(&path) {
+        let mut algo = "";
+        let mut hash = "";
+        for line in text.lines() {
+            if let Some(v) = line.strip_prefix("algo=") {
+                algo = v.trim();
+            }
+            if let Some(v) = line.strip_prefix("hash=") {
+                hash = v.trim();
+            }
+        }
+        if algo == FINGERPRINT_ALGO && !hash.is_empty() {
+            return Ok((
+                FingerprintResult { hash: hash.to_string(), fields: HashMap::new() },
+                true,
+            ));
+        }
+    }
+    let fp = machine_fingerprint()?;
+    let _ = std::fs::write(
+        &path,
+        format!("algo={}\nhash={}\n", FINGERPRINT_ALGO, fp.hash),
+    );
+    Ok((fp, false))
+}
+
+/// 强制真算并更新缓存（宿主后台刷新/换硬件检出用）。
+pub fn machine_fingerprint_refreshed(
+    cache_dir: &std::path::Path,
+) -> Result<FingerprintResult, Box<dyn std::error::Error>> {
+    let fp = machine_fingerprint()?;
+    let path = cache_dir.join(CACHE_FILE);
+    let _ = std::fs::write(
+        &path,
+        format!("algo={}\nhash={}\n", FINGERPRINT_ALGO, fp.hash),
+    );
+    Ok(fp)
+}
