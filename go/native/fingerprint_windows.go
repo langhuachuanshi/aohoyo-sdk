@@ -24,12 +24,8 @@ func machineFingerprint() (FingerprintResult, error) {
 	if h, err := os.Hostname(); err == nil && h != "" {
 		fields["hostname"] = h
 	}
-	board, bios := readHwSerials()
-	if board != "" {
-		fields["board_serial"] = board
-	}
-	if bios != "" {
-		fields["bios_serial"] = bios
+	for k, v := range readHwSignals() {
+		fields[k] = v
 	}
 
 	hash := combineHash(fields)
@@ -47,27 +43,52 @@ func isValidSerial(v string) bool {
 	return true
 }
 
-// readHwSerials PowerShell 一次调用取主板/BIOS 序列号。
-func readHwSerials() (board, bios string) {
-	out, err := exec.Command("powershell", "-NoProfile", "-Command",
-		"(Get-CimInstance Win32_BaseBoard).SerialNumber; (Get-CimInstance Win32_BIOS).SerialNumber").Output()
+// readHwSignals PowerShell 一次调用取全部硬件信号（与 rust read_hw_signals 同一脚本/字段）。
+// 返回：board_serial / bios_serial / cpu_id / gpu_names / ram_bytes。
+func readHwSignals() map[string]string {
+	out := map[string]string{}
+	script := "(Get-CimInstance Win32_BaseBoard).SerialNumber; " +
+		"(Get-CimInstance Win32_BIOS).SerialNumber; " +
+		"(Get-CimInstance Win32_Processor | Select-Object -First 1).ProcessorId; " +
+		"(Get-CimInstance Win32_VideoController | Sort-Object Name | ForEach-Object Name) -join '|'; " +
+		"(Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum).Sum"
+	raw, err := exec.Command("powershell", "-NoProfile", "-Command", script).Output()
 	if err != nil {
-		return "", ""
+		return out
 	}
-	var lines []string
-	for _, l := range strings.Split(string(out), "\r\n") {
+	var rows []string
+	for _, l := range strings.Split(string(raw), "\r\n") {
 		l = strings.TrimSpace(l)
-		if l != "" {
-			lines = append(lines, l)
+		rows = append(rows, l)
+	}
+	pick := func(i int) string {
+		if i < len(rows) {
+			return rows[i]
+		}
+		return ""
+	}
+	insert := func(k, v string) {
+		if isValidSerial(v) {
+			out[k] = v
 		}
 	}
-	if len(lines) > 0 && isValidSerial(lines[0]) {
-		board = lines[0]
+	insert("board_serial", pick(0))
+	insert("bios_serial", pick(1))
+	insert("cpu_id", pick(2))
+	var gpus []string
+	for _, g := range strings.Split(pick(3), "|") {
+		g = strings.TrimSpace(g)
+		if g != "" && !strings.Contains(strings.ToLower(g), "microsoft basic display") {
+			gpus = append(gpus, strings.ToLower(g))
+		}
 	}
-	if len(lines) > 1 && isValidSerial(lines[1]) {
-		bios = lines[1]
+	if len(gpus) > 0 {
+		out["gpu_names"] = strings.Join(gpus, "|")
 	}
-	return board, bios
+	if sum := strings.TrimSpace(pick(4)); sum != "" && sum != "0" {
+		out["ram_bytes"] = sum
+	}
+	return out
 }
 
 // combineHash 按 key 排序拼接 "k=v;" 段后 SHA256 hex——与 rust combine_hash 同构。

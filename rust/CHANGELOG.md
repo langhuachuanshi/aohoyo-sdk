@@ -8,10 +8,11 @@
 
 ### 变更
 
-- **机器指纹 v2（⚠️ hash 会变）**: Windows 在 MachineGuid+hostname 基础上补硬件级信号——
-  主板序列号（Win32_BaseBoard）+ BIOS 序列号（Win32_BIOS），PowerShell Get-CimInstance 读取
-  （零三方依赖，启动时算一次）；厂商占位值（None/Default string 等）自动跳过。
-  与 go/native fingerprint_windows.go 严格同步。升级后旧指纹失效，绑定需重绑
+- **机器指纹 v3（⚠️ hash 会变）**: Windows 全硬件信号——MachineGuid + hostname + 主板序列号 +
+  BIOS 序列号 + CPU ProcessorId + 显卡名列表（排序拼接，过滤驱动未装占位）+ 内存总容量字节。
+  PowerShell Get-CimInstance 一次调用读取（零三方依赖，启动时算一次）；占位值自动跳过。
+  与 go/native fingerprint_windows.go 严格同步。换/加显卡内存等硬件变更 → 指纹变（产品口径：
+  换硬件 = 新设备，需重新授权）。升级后旧指纹失效，绑定需重绑
 
 ### 新增
 

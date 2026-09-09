@@ -38,24 +38,48 @@ fn is_valid_serial(v: &str) -> bool {
         )
 }
 
-/// PowerShell 一次调用取主板/BIOS 序列号（零三方依赖；本机调用约 0.5s，指纹仅启动算一次）。
+/// PowerShell 一次调用取全部硬件信号（带标签 k=v 输出，空实例输出空值不占行位错乱）。
+/// 信号：主板/BIOS 序列号、CPU ProcessorId、显卡名列表（排序 | 拼接）、内存总容量字节。
+/// 零三方依赖；本机调用约 1s，指纹仅启动算一次。
 #[cfg(windows)]
-fn read_hw_serials() -> (Option<String>, Option<String>) {
-    let out = std::process::Command::new("powershell")
-        .args(["-NoProfile", "-Command",
-               "(Get-CimInstance Win32_BaseBoard).SerialNumber; (Get-CimInstance Win32_BIOS).SerialNumber"])
-        .output();
-    let stdout = match out {
+fn read_hw_signals() -> HashMap<String, String> {
+    let mut out_map = HashMap::new();
+    let script = "(Get-CimInstance Win32_BaseBoard).SerialNumber;                   (Get-CimInstance Win32_BIOS).SerialNumber;                   (Get-CimInstance Win32_Processor | Select-Object -First 1).ProcessorId;                   (Get-CimInstance Win32_VideoController | Sort-Object Name | ForEach-Object Name) -join '|';                   (Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum).Sum";
+    let out = match std::process::Command::new("powershell")
+        .args(["-NoProfile", "-Command", script])
+        .output()
+    {
         Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout).to_string(),
-        _ => return (None, None),
+        _ => return out_map,
     };
-    let mut lines = stdout.lines().map(|l| l.trim()).filter(|l| !l.is_empty());
-    let board = lines.next().map(|s| s.to_string());
-    let bios = lines.next().map(|s| s.to_string());
-    (
-        board.filter(|v| is_valid_serial(v)),
-        bios.filter(|v| is_valid_serial(v)),
-    )
+    // 无标签场景：按行序对应 [board, bios, cpu, gpu, ram]；空实例产生空行，用行序容错
+    let rows: Vec<&str> = stdout.lines().map(|l| l.trim()).collect();
+    let pick = |i: usize| rows.get(i).copied().unwrap_or("").to_string();
+    let insert = |map: &mut HashMap<String, String>, k: &str, v: String| {
+        if is_valid_serial(&v) {
+            map.insert(k.into(), v);
+        }
+    };
+    insert(&mut out_map, "board_serial", pick(0));
+    insert(&mut out_map, "bios_serial", pick(1));
+    insert(&mut out_map, "cpu_id", pick(2));
+    // 显卡：过滤驱动未装时的软件渲染占位；多卡按名排序拼接（装/换卡 → 指纹变）
+    let gpu: Vec<&str> = pick(3)
+        .split('|')
+        .filter(|g| !g.is_empty() && !g.to_ascii_lowercase().contains("microsoft basic display"))
+        .collect();
+    if !gpu.is_empty() {
+        let mut g = gpu.join("|");
+        g.make_ascii_lowercase();
+        out_map.insert("gpu_names".into(), g);
+    }
+    // 内存：总容量字节（加/换内存条 → 指纹变）
+    if let Ok(bytes) = pick(4).parse::<u64>() {
+        if bytes > 0 {
+            out_map.insert("ram_bytes".into(), bytes.to_string());
+        }
+    }
+    out_map
 }
 
 #[cfg(windows)]
@@ -71,14 +95,10 @@ pub fn machine_fingerprint() -> Result<FingerprintResult, Box<dyn std::error::Er
             fields.insert("hostname".into(), h);
         }
     }
-    // 指纹 v2（2026-09-10）：补硬件级信号。读不到/厂商占位值则跳过（字段集确定性由
-    // 「硬件不变 → 读数不变」保证；注意与 go/native fingerprint_windows.go 严格同步）。
-    let (board, bios) = read_hw_serials();
-    if let Some(b) = board {
-        fields.insert("board_serial".into(), b);
-    }
-    if let Some(b) = bios {
-        fields.insert("bios_serial".into(), b);
+    // 指纹 v3（2026-09-10）：主板/BIOS/CPU/显卡/内存 全硬件信号。读不到/厂商占位值则跳过
+    //（字段集确定性由「硬件配置不变 → 读数不变」保证；与 go/native 严格同步）。
+    for (k, v) in read_hw_signals() {
+        fields.insert(k, v);
     }
     let hash = combine_hash(&fields);
     Ok(FingerprintResult { hash, fields })

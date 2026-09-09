@@ -8,8 +8,10 @@
 
 ### 变更
 
-- **机器指纹 v2（⚠️ hash 会变）**: Windows 补主板/BIOS 序列号（PowerShell Get-CimInstance，
-  占位值跳过），与 rust/native 严格同步；升级后旧指纹失效，绑定需重绑
+- **机器指纹 v3（⚠️ hash 会变）**: Windows 全硬件信号——MachineGuid + hostname + 主板序列号 +
+  BIOS 序列号 + CPU ProcessorId + 显卡名列表（排序拼接，过滤驱动未装占位）+ 内存总容量字节。
+  PowerShell 一次调用读取，与 rust/native 严格同步；换/加硬件 → 指纹变（换硬件 = 新设备）。
+  升级后旧指纹失效，绑定需重绑
 
 ## [1.2.1] - 2026-09-10
 
