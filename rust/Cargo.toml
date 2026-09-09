@@ -1,0 +1,5 @@
+# workspace 根：让 cargo 的 git 依赖（aohoyo-native = { git = ".../aohoyo-sdk" }）
+# 能在仓库子目录中定位 native crate。native 的 tag = rust/v*
+[workspace]
+members = ["native"]
+resolver = "2"
