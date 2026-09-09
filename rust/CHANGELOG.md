@@ -4,6 +4,15 @@
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-09-10
+
+### 变更
+
+- **机器指纹 v2（⚠️ hash 会变）**: Windows 在 MachineGuid+hostname 基础上补硬件级信号——
+  主板序列号（Win32_BaseBoard）+ BIOS 序列号（Win32_BIOS），PowerShell Get-CimInstance 读取
+  （零三方依赖，启动时算一次）；厂商占位值（None/Default string 等）自动跳过。
+  与 go/native fingerprint_windows.go 严格同步。升级后旧指纹失效，绑定需重绑
+
 ### 新增
 
 - **CheckResult 新增 `mirror_download_url`（UPG-1 镜像契约）**: 镜像解析端点（302 直链或回退主源），未镜像为空（serde default，旧服务端响应兼容）；下载候选链消费待蓝奏云接入后落地

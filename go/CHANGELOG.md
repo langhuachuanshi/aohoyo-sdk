@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-09-10
+
+### 变更
+
+- **机器指纹 v2（⚠️ hash 会变）**: Windows 补主板/BIOS 序列号（PowerShell Get-CimInstance，
+  占位值跳过），与 rust/native 严格同步；升级后旧指纹失效，绑定需重绑
+
 ## [1.2.1] - 2026-09-10
 
 ### 修复
