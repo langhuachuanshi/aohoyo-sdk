@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+### 新增
+
+- **`sdk.kv`**: KV 配置读取模块——`getAll()` 拉取当前应用可见的全部 KV（本应用 + 公共区合并，
+  本应用同 key 优先），GET 空 body 设备签名（免登录可用），值已由服务端按类型解析
+  （string/number/boolean/json → 原生类型）。需配置 app_secret
+
 ## [0.10.3] - 2026-09-10
 
 ### 修复

@@ -6,6 +6,9 @@
 
 ### 新增
 
+- **`get_kv`**: 拉取当前应用可见的全部 KV 配置（GET /as/v1/app/kv，DeviceSign 签名，本应用 +
+  公共区合并、本应用同 key 优先），值已按类型解析。与 go/native `GetKV`、js `sdk.kv.getAll` 同构
+
 - **Windows zip 包自更新**: `install`/`perform_upgrade` 支持 `.zip` 安装包——后台版本管理本就接受
   zip 上传，此前原生层在安装阶段报「暂不支持」。约定：zip 内容 = 应用安装目录完整内容（或单个主
   exe），主 exe 识别 = zip 根下与包同名 exe（忽略大小写），否则根下唯一 exe；顶层唯一目录自动剥壳；

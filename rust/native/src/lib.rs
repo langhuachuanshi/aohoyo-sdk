@@ -9,6 +9,7 @@
 pub mod download;
 pub mod fingerprint;
 pub mod install;
+pub mod kv;
 pub mod mutex;
 pub mod risks;
 pub mod secure;

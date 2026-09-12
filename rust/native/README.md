@@ -21,6 +21,7 @@
 | `verify_file` | 文件哈希校验（SHA256 优先 / MD5） | 版本管理 |
 | `install` | 启动安装器（Windows msi/exe 静默 + zip 解包自替换；Linux deb/rpm/AppImage；macOS pkg），分离进程 | 版本管理 |
 | `perform_upgrade` | 一站式升级：检测 → 验签 → 下载 → 校验 → 安装（on_stage 阶段回调） | 版本管理 |
+| `get_kv` | 拉取应用可见的全部 KV 配置（本应用 + 公共区合并，本应用同 key 优先；值已按类型解析） | KV 储存 |
 
 ## 使用（Tauri 集成）
 

@@ -17,6 +17,7 @@ export {
 export { createStorageModule, type StorageModule, type AvatarUploadResult } from './modules/storage'
 export { createFeedbackModule } from './modules/feedback'
 export { createAdsModule } from './modules/ads'
+export { createKvModule, type KvModule } from './modules/kv'
 export * from './types'
 
 import { SdkClient, type SdkConfig } from './client'
@@ -31,6 +32,7 @@ import { createCaptchaModule } from './modules/captcha'
 import { createStorageModule } from './modules/storage'
 import { createFeedbackModule } from './modules/feedback'
 import { createAdsModule } from './modules/ads'
+import { createKvModule } from './modules/kv'
 
 /**
  * 创建 SDK 实例
@@ -94,6 +96,7 @@ export function createSdk(config: SdkConfig) {
     storage: createStorageModule(client),
     feedback: createFeedbackModule(client),
     ads: createAdsModule(client),
+    kv: createKvModule(client),
   }
 }
 

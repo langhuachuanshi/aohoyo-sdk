@@ -25,6 +25,7 @@
 | `PerformUpgrade` | 一站式升级：检测 → 验签 → 下载 → 校验 → 安装（OnStage 阶段回调） | 版本管理 |
 | `GetAds` | 拉取在投广告（DeviceSign，GET 空 body 签名；按广告位 code 分组） | 广告系统 |
 | `RecordImpression` / `RecordClick` | 广告曝光 / 点击上报（公开接口，限流 100/min） | 广告系统 |
+| `GetKV` | 拉取应用可见的全部 KV 配置（本应用 + 公共区合并，本应用同 key 优先；值已按类型解析） | KV 储存 |
 
 ## 使用（Wails 集成）
 
