@@ -115,7 +115,6 @@ pub struct UpgradeReport {
 pub struct Native {
     app_id: String,
     app_secret: String,
-    #[allow(dead_code)]
     base_url: String,
     cert_pin: Mutex<Option<String>>,
     allow_http: std::sync::atomic::AtomicBool,
