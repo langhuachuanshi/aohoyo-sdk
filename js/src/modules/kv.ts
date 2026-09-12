@@ -51,14 +51,19 @@ export function createKvModule(client: SdkClient) {
 
   return {
     /**
-     * 拉取当前应用可见的全部 KV 配置（DeviceSign 鉴权，GET 空 body 签名）。
+     * 拉取应用可见的 KV 配置（DeviceSign 鉴权，GET 空 body 签名）。
      * 服务端返回本应用 + 公共区的合并结果（本应用同 key 优先），值已按类型解析：
      * string → string，number → number，boolean → boolean，json → 解析后的对象/数组。
+     *
+     * @param keys 可选。不传 → 返回全部；传单个 key 或 key 数组 → 只返回指定的键
+     *  （不存在的键直接缺席，不报错）。注意：按需过滤仅节省传输，不是访问控制。
      */
-    async getAll(): Promise<Record<string, unknown>> {
+    async get(keys?: string | string[]): Promise<Record<string, unknown>> {
       await client.ready
       const headers = await buildSignHeaders(client.deviceId, client.appId, requireSecret(), '')
-      return client.getWithHeaders<Record<string, unknown>>('/as/v1/app/kv', undefined, headers)
+      const params =
+        keys === undefined ? undefined : { key: Array.isArray(keys) ? keys.join(',') : keys }
+      return client.getWithHeaders<Record<string, unknown>>('/as/v1/app/kv', params, headers)
     },
   }
 }

@@ -6,8 +6,10 @@
 
 ### 新增
 
-- **`GetKV`**（native）: 拉取当前应用可见的全部 KV 配置（GET /as/v1/app/kv，DeviceSign 签名，
-  本应用 + 公共区合并、本应用同 key 优先），值已按类型解析。与 js `sdk.kv.getAll`、rust `get_kv` 同构
+- **`GetKV`**（native）: 拉取应用可见的 KV 配置（GET /as/v1/app/kv，DeviceSign 签名，
+  本应用 + 公共区合并、本应用同 key 优先），值已按类型解析。`keys` 为 variadic：
+  不传返回全部，传指定键按需拉取（?key=k1,k2，不存在的键直接缺席）。
+  与 js `sdk.kv.get`、rust `get_kv` 同构
 
 ## [1.2.6] - 2026-09-10
 

@@ -112,7 +112,7 @@ await sdk.user.changePhone({ phone: newPhone, code: newCode, old_code: oldCode }
 | `storage` | `sdk.storage` | 头像上传 |
 | `feedback` | `sdk.feedback` | 用户反馈（登录 JWT / 免登录 DeviceSign） |
 | `ads` | `sdk.ads` | 广告拉取（按广告位分组）+ 曝光/点击上报（登录 JWT / 免登录 DeviceSign 自动切换） |
-| `kv` | `sdk.kv` | KV 配置读取（本应用 + 公共区合并，免登录 DeviceSign） |
+| `kv` | `sdk.kv` | KV 配置读取（本应用 + 公共区合并，免登录 DeviceSign；`get(keys?)` 不传全量、传 key 按需拉取） |
 
 ### SdkClient
 

@@ -15,6 +15,9 @@ func TestGetKV(t *testing.T) {
 		if r.URL.Path != "/as/v1/app/kv" {
 			t.Errorf("path = %s, want /as/v1/app/kv", r.URL.Path)
 		}
+		if q := r.URL.Query().Get("key"); q != "" {
+			t.Errorf("no keys passed but got key query = %q", q)
+		}
 		gotHeaders = map[string]string{
 			"X-App-ID":    r.Header.Get("X-App-ID"),
 			"X-Device-ID": r.Header.Get("X-Device-ID"),
@@ -58,6 +61,28 @@ func TestGetKV(t *testing.T) {
 	}
 	if _, ok := vars["extra"].(map[string]any); !ok {
 		t.Errorf("extra 应解析为 map, got %T", vars["extra"])
+	}
+}
+
+// TestGetKVWithKeys 指定 key 时请求带 ?key= 逗号串
+func TestGetKVWithKeys(t *testing.T) {
+	var gotQuery string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotQuery = r.URL.Query().Get("key")
+		w.Write([]byte(`{"code":200,"message":"success","data":{"group_link":"https://t.me/x"}}`))
+	}))
+	defer ts.Close()
+
+	n := New("app_kv_test", "secret_kv_test", ts.URL)
+	vars, err := n.GetKV(context.Background(), "device-1", "group_link", "extra")
+	if err != nil {
+		t.Fatalf("GetKV: %v", err)
+	}
+	if gotQuery != "group_link,extra" {
+		t.Errorf("key query = %q, want group_link,extra", gotQuery)
+	}
+	if vars["group_link"] != "https://t.me/x" {
+		t.Errorf("group_link = %v", vars["group_link"])
 	}
 }
 

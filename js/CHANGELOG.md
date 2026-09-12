@@ -6,9 +6,11 @@
 
 ### 新增
 
-- **`sdk.kv`**: KV 配置读取模块——`getAll()` 拉取当前应用可见的全部 KV（本应用 + 公共区合并，
+- **`sdk.kv`**: KV 配置读取模块——`get(keys?)` 拉取应用可见的 KV（本应用 + 公共区合并，
   本应用同 key 优先），GET 空 body 设备签名（免登录可用），值已由服务端按类型解析
-  （string/number/boolean/json → 原生类型）。需配置 app_secret
+  （string/number/boolean/json → 原生类型）。`keys` 可选：不传返回全部，传单个 key 或
+  key 数组只返回指定键（不存在的键直接缺席）。需配置 app_secret。
+  注意：按需过滤仅节省传输，不是访问控制
 
 ## [0.10.3] - 2026-09-10
 
