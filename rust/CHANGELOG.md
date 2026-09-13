@@ -4,6 +4,15 @@
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-09-13
+
+### 新增
+
+- **`get_kv`**: 拉取应用可见的 KV 配置（GET /as/v1/app/kv，DeviceSign 签名，本应用 +
+  公共区 `__common__` 合并、本应用同 key 优先），值已按 value_type 解析（string/number/
+  boolean/json → 原生类型）；`keys: &[&str]` 传 `&[]` 全量、传指定键按需拉取
+  （`?key=k1,k2`，不存在的键直接缺席）。与 go/native `GetKV`、js `sdk.kv.get` 同构
+
 ## [0.4.1] - 2026-09-10
 
 ### 新增
