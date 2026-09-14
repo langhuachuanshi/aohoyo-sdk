@@ -123,17 +123,36 @@ mod tests {
     use crate::Native;
     use std::io::Read;
 
-    /// 起极简 TCP mock（单次响应固定 JSON），返回 (addr, 收到的完整请求文本)
+    /// 起极简 TCP mock（单次响应固定 JSON），返回 (addr, 收到的完整请求文本)。
+    /// 读满整个请求（header 解析 Content-Length 后继续读 body）——POST 的 body
+    /// 与 header 可能分 TCP 段到达，单次 read 会截到无 body 的半截请求（flaky）。
     fn spawn_mock(body: &'static str) -> (std::net::SocketAddr, std::sync::mpsc::Receiver<String>) {
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let addr = listener.local_addr().unwrap();
         let (tx, rx) = std::sync::mpsc::channel();
         std::thread::spawn(move || {
             let (mut stream, _) = listener.accept().unwrap();
-            let mut buf = [0u8; 4096];
-            let n = stream.read(&mut buf).unwrap_or(0);
-            let req = String::from_utf8_lossy(&buf[..n]).to_string();
-            let _ = tx.send(req);
+            let mut buf: Vec<u8> = Vec::new();
+            let mut chunk = [0u8; 4096];
+            loop {
+                if let Some(pos) = buf.windows(4).position(|w| w == b"\r\n\r\n") {
+                    let head = String::from_utf8_lossy(&buf[..pos]).to_ascii_lowercase();
+                    let cl = head
+                        .lines()
+                        .find_map(|l| l.strip_prefix("content-length:"))
+                        .and_then(|v| v.trim().parse::<usize>().ok())
+                        .unwrap_or(0);
+                    if buf.len() >= pos + 4 + cl {
+                        break;
+                    }
+                }
+                let n = stream.read(&mut chunk).unwrap_or(0);
+                if n == 0 {
+                    break;
+                }
+                buf.extend_from_slice(&chunk[..n]);
+            }
+            let _ = tx.send(String::from_utf8_lossy(&buf).to_string());
             let resp = format!(
                 "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
                 body.len(),
