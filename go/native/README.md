@@ -23,7 +23,7 @@
 | `VerifyFile` | 文件哈希校验（SHA256 优先 / MD5） | 版本管理 |
 | `Install` | 启动安装器（Windows msi/exe 静默 + zip 解包自替换；Linux deb/rpm/AppImage；macOS pkg），分离进程 | 版本管理 |
 | `PerformUpgrade` | 一站式升级：检测 → 验签 → 下载 → 校验 → 安装（OnStage 阶段回调） | 版本管理 |
-| `GetAds` | 拉取在投广告（DeviceSign，GET 空 body 签名；按广告位 code 分组） | 广告系统 |
+| `GetAds` | 拉取指定广告位的在投广告（DeviceSign，GET 空 body 签名；位 code 必传——客户端与后台的私有约定，无全量拉取） | 广告系统 |
 | `RecordImpression` / `RecordClick` | 广告曝光 / 点击上报（公开接口，限流 100/min） | 广告系统 |
 | `GetKV` | 拉取应用可见的 KV 配置（本应用 + 公共区合并，本应用同 key 优先；值已按类型解析；`keys...` 不传全量、传指定键按需拉取） | KV 储存 |
 
@@ -85,7 +85,8 @@ if report.InstallLaunched {
 - `DownloadFile` 断点续传落 `dest+".part"`，续传被拒自动从头重下；下载不完整保留 `.part` 下次续传。
 - **下载地址安全门**：非 `https://` 的安装包地址默认拒绝（防清单篡改导向明文源），`n.AllowHTTP = true`
   显式放开 http 仅供本地调试；`file:`/`ftp:` 等其他 scheme 任何情况都拒绝。
-- 广告：`GetAds(ctx, deviceID, positionCode)` 返回按广告位分组的在投广告（完整契约见主仓库
+- 广告：`GetAds(ctx, deviceID, positionCode)` 返回指定广告位的在投广告（`positionCode` 必传——
+  位 code 为客户端与后台的私有约定，无全量拉取；完整契约见主仓库
   `docs/specs/ad.md`）；曝光/点击上报建议传机器指纹 hash 作 `device_id` 保统计口径稳定。
 - `Install` 静默参数默认 `/SILENT`（NSIS/Inno 兼容），可用 `InstallOptions.SilentArgs` 覆盖（如 MSI 专用场景）。
 - Windows 升级 zip 包：内容 = 应用安装目录完整内容（或单个主 exe），主 exe = zip 根下与包同名 exe

@@ -38,6 +38,13 @@ func TestGetAdsSigned(t *testing.T) {
 	}
 }
 
+func TestGetAdsRequiresPosition(t *testing.T) {
+	n := New("demo", "secret", "http://127.0.0.1:1")
+	if _, err := n.GetAds(context.Background(), "device-1", ""); err == nil {
+		t.Fatal("positionCode 为空应报错（SDK 不提供全量拉取）")
+	}
+}
+
 func TestAdReportPlain(t *testing.T) {
 	var body map[string]any
 	var path string

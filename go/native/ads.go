@@ -131,14 +131,16 @@ func decodeEnvelope(resp *http.Response, path string, out any) error {
 	return nil
 }
 
-// GetAds 拉取当前有效广告（DeviceSign 鉴权；登录态宿主也可自行带 JWT 调 HTTP）。
-// deviceID 建议传机器指纹 hash（灰度/统计口径稳定）；positionCode 非空时只返回该广告位。
+// GetAds 拉取指定广告位的当前有效广告（DeviceSign 鉴权；登录态宿主也可自行带 JWT 调 HTTP）。
+// deviceID 建议传机器指纹 hash（灰度/统计口径稳定）。
+// positionCode 必传：位 code 为客户端与后台的私有约定，SDK 不提供全量拉取。
 func (n *Native) GetAds(ctx context.Context, deviceID, positionCode string) (*ClientAds, error) {
+	if positionCode == "" {
+		return nil, fmt.Errorf("positionCode 必传：位 code 为客户端与后台的私有约定，SDK 不提供全量拉取")
+	}
 	q := url.Values{}
 	q.Set("app_id", n.AppID)
-	if positionCode != "" {
-		q.Set("position", positionCode)
-	}
+	q.Set("position", positionCode)
 	var out ClientAds
 	if err := n.getSigned(ctx, endpointAds, q, deviceID, &out); err != nil {
 		return nil, err

@@ -1,5 +1,5 @@
 import type { SdkClient } from '../client'
-import type { AdReportParams, ClientAdsResponse, GetAdsParams } from '../types/ad'
+import type { AdReportParams, ClientAdsResponse } from '../types/ad'
 
 /**
  * HMAC-SHA256 签名（Web Crypto API）
@@ -50,12 +50,16 @@ export function createAdsModule(client: SdkClient) {
 
   return {
     /**
-     * 拉取当前有效广告（按广告位分组）。
+     * 拉取指定广告位的当前有效广告（按广告位分组）。
+     * 位 code 必传：位 code 为客户端与后台的私有约定，SDK 不提供全量拉取。
      * 登录用户走 JWT，免登录设备走 DeviceSign（GET 空 body 签名）。
      */
-    async getAds(params?: GetAdsParams): Promise<ClientAdsResponse> {
+    async getAds(position: string): Promise<ClientAdsResponse> {
       await client.ready
-      const query = { app_id: client.appId, position: params?.position || undefined }
+      if (!position) {
+        throw new Error('position is required: 位 code 为客户端与后台的私有约定，SDK 不提供全量拉取')
+      }
+      const query = { app_id: client.appId, position }
 
       if (client.isLoggedIn) {
         return client.get<ClientAdsResponse>('/as/v1/ads', query)

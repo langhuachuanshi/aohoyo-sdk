@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-09-14
+
+### 破坏性变更
+
+- **`getAds(position)` 位 code 必传**: 签名从 `getAds(params?: GetAdsParams)` 改为
+  `getAds(position: string)`，移除「不传 = 拉取该应用全部广告位」语义，`GetAdsParams`
+  类型删除。位 code 是「某个客户端构建 ↔ 后台广告位配置」之间的私有约定，SDK 作为通用库
+  无法解释「该应用全部广告位」；且服务端广告位含公共区合并场景，全量 map 会出现宿主从未
+  定义的键，全量语义不可解释、还把「显示什么」的裁决权漏给调用方。服务端接口不动（仍支持
+  不传 = 全量），仅 SDK 层收窄。宿主原 `getAds()` / `getAds({ position })` 需改为
+  `getAds('splash')`。与 go `native.GetAds` 同步收窄
+
 ## [0.11.0] - 2026-09-13
 
 ### 新增

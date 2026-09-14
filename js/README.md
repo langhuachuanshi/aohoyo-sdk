@@ -129,7 +129,7 @@ await sdk.user.changePhone({ phone: newPhone, code: newCode, old_code: oldCode }
 
 ```ts
 // 拉取在投广告（按广告位 code 分组）；登录走 JWT，免登录自动 DeviceSign（GET 空 body 签名）
-const ads = await sdk.ads.getAds({ position: 'splash' })   // position 省略 = 全部启用广告位
+const ads = await sdk.ads.getAds('splash')   // 位 code 必传：客户端与后台的私有约定，无全量拉取
 const item = ads.positions.splash?.[0]
 
 if (item) {

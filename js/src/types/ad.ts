@@ -34,12 +34,6 @@ export interface ClientAdsResponse {
   positions: Record<string, AdItem[]>
 }
 
-/** 拉取广告参数 */
-export interface GetAdsParams {
-  /** 指定广告位 code，不传返回该应用全部启用广告位 */
-  position?: string
-}
-
 /** 曝光/点击上报参数 */
 export interface AdReportParams {
   /** 设备码，缺省用 client.deviceId（建议传机器指纹保证统计口径稳定） */
