@@ -46,7 +46,8 @@ export function createUserModule(client: SdkClient) {
     },
 
     /** 发送「绑定/换绑」验证码（登录场景，需登录态）。
-     *  scene 仅限登录场景；注册/登录/找回密码请用 sdk.auth.sendCode（公开接口）。 */
+     *  scene 仅限登录场景；注册/登录/找回密码请用 sdk.auth.sendCode（公开接口）。
+     *  自动附加 app_id——后端按应用路由绑定的短信/邮件服务商 */
     sendProfileCode(data: {
       scene: 'bind_phone' | 'change_phone' | 'bind_email' | 'change_email'
       type: 'phone' | 'email'
@@ -55,7 +56,7 @@ export function createUserModule(client: SdkClient) {
       captcha_id?: string
       captcha_code?: string
     }): Promise<void> {
-      return client.post('/uc/v1/profile/code/send', data)
+      return client.post('/uc/v1/profile/code/send', { ...data, app_id: client.appId })
     },
 
     /** 绑定手机（当前无手机时，scene=bind_phone） */

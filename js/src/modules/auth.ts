@@ -88,7 +88,8 @@ export function createAuthModule(client: SdkClient, opts?: AuthModuleOptions) {
       return client.post('/uc/v1/auth/refresh', { refresh_token })
     },
 
-    /** 发送验证码（公开场景：注册 / 登录 / 找回密码）。需先完成服务商验证码（图形/行为），传入凭证 */
+    /** 发送验证码（公开场景：注册 / 登录 / 找回密码）。需先完成服务商验证码（图形/行为），传入凭证。
+     *  自动附加 app_id——后端按应用路由绑定的短信/邮件服务商，缺省会落到全局默认服务商 */
     async sendCode(data: {
       scene: 'register' | 'login' | 'reset_password'
       type: 'phone' | 'email'
@@ -97,7 +98,7 @@ export function createAuthModule(client: SdkClient, opts?: AuthModuleOptions) {
       captcha_id?: string
       captcha_code?: string
     }): Promise<void> {
-      return client.post('/uc/v1/auth/code/send', data)
+      return client.post('/uc/v1/auth/code/send', { ...data, app_id: client.appId })
     },
 
     /** 重置密码（未登录） */
