@@ -2,7 +2,6 @@ export { SdkClient, type SdkConfig } from './client'
 export { getDeviceInfo, initDeviceId } from './device'
 export { createAuthModule } from './modules/auth'
 export { createUserModule } from './modules/user'
-export { createUpgradeModule } from './modules/upgrade'
 export { createDeviceModule } from './modules/device'
 export { createSessionModule } from './modules/session'
 export { createOAuthModule } from './modules/oauth'
@@ -16,14 +15,12 @@ export {
 } from './modules/captcha'
 export { createStorageModule, type StorageModule, type AvatarUploadResult } from './modules/storage'
 export { createFeedbackModule } from './modules/feedback'
-export { createAdsModule } from './modules/ads'
 export { createKvModule, type KvModule } from './modules/kv'
 export * from './types'
 
 import { SdkClient, type SdkConfig } from './client'
 import { createAuthModule } from './modules/auth'
 import { createUserModule } from './modules/user'
-import { createUpgradeModule } from './modules/upgrade'
 import { createDeviceModule } from './modules/device'
 import { createSessionModule } from './modules/session'
 import { createOAuthModule } from './modules/oauth'
@@ -31,7 +28,6 @@ import { createStatsModule } from './modules/stats'
 import { createCaptchaModule } from './modules/captcha'
 import { createStorageModule } from './modules/storage'
 import { createFeedbackModule } from './modules/feedback'
-import { createAdsModule } from './modules/ads'
 import { createKvModule } from './modules/kv'
 
 /**
@@ -87,7 +83,6 @@ export function createSdk(config: SdkConfig) {
     client,
     auth,
     user: createUserModule(client),
-    upgrade: createUpgradeModule(client),
     device: createDeviceModule(client),
     session,
     oauth: createOAuthModule(client),
@@ -95,7 +90,6 @@ export function createSdk(config: SdkConfig) {
     captcha: createCaptchaModule(client),
     storage: createStorageModule(client),
     feedback: createFeedbackModule(client),
-    ads: createAdsModule(client),
     kv: createKvModule(client),
   }
 }

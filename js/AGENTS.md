@@ -31,7 +31,6 @@ src/
 │   ├── index.ts      ← 统一导出
 │   ├── auth.ts       ← LoginResponse, RegisterParams, SessionMode 等
 │   ├── user.ts       ← UserInfoResponse, MenuItem, PasswordPolicy
-│   ├── upgrade.ts    ← UpgradeCheckResponse, UpgradeStrategy, AutoCheckConfig
 │   ├── device.ts     ← DeviceInfo, NativeDeviceInfo, DeviceVerifyResponse
 │   ├── oauth.ts      ← OAuthProvider, OAuthCallbackResult 等
 │   ├── stats.ts      ← StatsEvent, StatsConfig
@@ -41,7 +40,6 @@ src/
     ├── user.ts       ← 用户信息/资料/密码/手机邮箱绑定/菜单
     ├── session.ts    ← 会话管理（heartbeat/login/open 三种模式）
     ├── device.ts     ← 设备上报/验证（HMAC-SHA256 签名）
-    ├── upgrade.ts    ← 版本升级检测/自动轮询
     ├── oauth.ts      ← 第三方登录（OAuth）
     ├── stats.ts      ← 统计埋点（session/page_view/custom + 60s 时长 checkpoint；error 捕获已下线）
     ├── captcha.ts    ← 验证码（阿里云滑块 + 图片验证码）
@@ -55,7 +53,7 @@ src/
 |------|----------|----------|
 | auth / user / oauth / session | `/uc/v1/auth/*` `/uc/v1/profile/*` `/uc/v1/menus/*` | UC（用户中心） |
 | captcha / stats / storage / feedback | `/as/v1/captcha/*` `/as/v1/stats/*` `/as/v1/storage/*` `/as/v1/feedback/*` | AS |
-| upgrade / device | `/as/v1/upgrade/*` `/as/v1/devices/*` | AS |
+| device | `/as/v1/devices/*` | AS |
 | device（安全策略下发） | `/as/v1/app/security/config` | AS（DeviceSign 鉴权） |
 
 ---
@@ -70,8 +68,8 @@ const sdk = createSdk({
   app_id: 'your_app_id',
   app_secret: 'your_app_secret',        // device 模块签名需要
   channel_code: 'official',             // 渠道代码
-  current_version_code: 10203,          // 当前版本号（upgrade 使用）
-  platform: 'windows',                  // 当前平台（upgrade 使用）
+  current_version_code: 10203,          // 当前版本号（auth/stats/device 上报携带）
+  platform: 'windows',                  // 当前平台（device 上报携带）
   onTokenExpired: () => router.push('/login'),
 })
 
@@ -79,17 +77,6 @@ const sdk = createSdk({
 const res = await sdk.auth.login({ username: 'test', password: '123456' })
 sdk.client.setTokens(res.access_token, res.refresh_token)
 // 会话已自动启动（按后台下发的 session_mode）
-
-// 版本检测
-const upgrade = await sdk.upgrade.checkUpgrade()
-if (upgrade.has_update) {
-  if (upgrade.force_update) {
-    // 强制更新 — 阻断式弹窗
-  } else {
-    // 普通更新 — 提示用户
-  }
-  // upgrade.download_url / upgrade.md5 / upgrade.sha256
-}
 
 // 统计埋点
 sdk.stats.trackPageView('/home')
@@ -168,32 +155,7 @@ sdk.stats.trackEvent('button_click', { button: 'buy' })
 
 **risk_flags 枚举（服务端 risk.Analyze）：** `debug` / `emulator` / `multiopen` / `root` / `hook` / `sign`（debug 对应 RiskDebug=6；sign 为服务端判定项，客户端不产生）。检测项按安全策略开关裁剪（如 anti_debug=false 则 debug 不上报）。
 
-### 5. upgrade 模块 — 版本升级
-
-| 函数 | 签名 | 说明 |
-|------|------|------|
-| `checkUpgrade` | `() => Promise<UpgradeCheckResponse>` | 单次版本检测（自动带 app_id / version_code / platform / channel_code / device_id） |
-| `getStrategy` | `() => Promise<UpgradeStrategy \| null>` | 获取应用最新已发布版本（不受灰度限制，用于调试/预览） |
-| `startAutoCheck` | `(config?: { intervalMs?, onUpdate?, onForceUpdate? }) => void` | 启动定时自动检测，默认间隔 30 分钟 ± 1 分钟随机抖动 |
-| `stopAutoCheck` | `() => void` | 停止自动检测 |
-
-**UpgradeCheckResponse 关键字段：**
-```ts
-{
-  has_update: boolean       // 是否有新版本
-  force_update: boolean     // 是否强制更新
-  latest_version: string    // 最新版本号（如 "1.3.0"）
-  latest_version_code: number // 最新版本 code
-  platform: string          // 平台
-  download_url: string      // 下载地址
-  file_size: number         // 文件大小（字节）
-  md5: string               // MD5 校验值
-  sha256: string            // SHA256 校验值
-  update_log: string        // 更新日志
-}
-```
-
-### 6. oauth 模块 — 第三方登录
+### 5. oauth 模块 — 第三方登录
 
 | 函数 | 签名 | 说明 |
 |------|------|------|
@@ -204,7 +166,7 @@ sdk.stats.trackEvent('button_click', { button: 'buy' })
 | `unbind` | `(provider: string) => Promise<void>` | 解绑第三方账号 |
 | `getBindings` | `() => Promise<OAuthBinding[]>` | 查询当前用户已绑定的三方账号 |
 
-### 7. stats 模块 — 统计埋点
+### 6. stats 模块 — 统计埋点
 
 | 函数 | 签名 | 说明 |
 |------|------|------|
@@ -222,7 +184,7 @@ sdk.stats.trackEvent('button_click', { button: 'buy' })
 - 页面隐藏时落 checkpoint + flush，关闭前 sendBeacon 发最终 session_end
 - ❌ JS 运行时错误捕获已下线（SDK-4）：不再监听 `window.error` / `unhandledrejection`
 
-### 8. captcha 模块 — 验证码
+### 7. captcha 模块 — 验证码
 
 | 函数 | 签名 | 说明 |
 |------|------|------|
@@ -233,13 +195,13 @@ sdk.stats.trackEvent('button_click', { button: 'buy' })
 | `createImage` | `(opts?: CreateImageOptions) => Promise<ImageCaptcha>` | 获取图片验证码（支持 char/math 模式） |
 | `verifyImage` | `(captcha_id, code) => Promise<void>` | 校验图片验证码（一次性，失败达上限锁定） |
 
-### 9. storage 模块 — 存储
+### 8. storage 模块 — 存储
 
 | 函数 | 签名 | 说明 |
 |------|------|------|
 | `uploadAvatar` | `(file: File \| Blob) => Promise<AvatarUploadResult>` | 上传头像（需登录态，图片 ≤2MB） |
 
-### 10. feedback 模块 — 用户反馈
+### 9. feedback 模块 — 用户反馈
 
 | 函数 | 说明 |
 |------|------|
@@ -261,7 +223,7 @@ sdk.stats.trackEvent('button_click', { button: 'buy' })
 | `app_id` | `string` | ✅ | 应用 ID |
 | `app_secret` | `string` | ❌ | 应用密钥（device 模块签名需要） |
 | `channel_code` | `string` | ❌ | 渠道代码（华为/小米等） |
-| `current_version_code` | `number` | ❌ | 当前版本号（upgrade 使用） |
+| `current_version_code` | `number` | ❌ | 当前版本号（auth/stats/device 上报携带） |
 | `platform` | `string` | ❌ | 当前平台（android/ios/windows/macos/linux） |
 | `onTokenExpired` | `() => void` | ❌ | Token 过期回调 |
 | `storage` | `{ getItem, setItem, removeItem }` | ❌ | 自定义存储（默认 localStorage） |
@@ -338,15 +300,10 @@ sdk.stats.trackEvent('button_click', { button: 'buy' })
    }
    ```
 
-2. **版本升级流程**：
-   ```
-   启动 App → sdk.upgrade.startAutoCheck({
-     onUpdate: (resp) => { /* 提示用户，展示 update_log + download_url */ },
-     onForceUpdate: (resp) => { /* 阻断式弹窗，必须更新 */ },
-   })
-   → 用户确认 → 下载 .exe/.dmg/.deb（用系统原生下载能力，支持断点续传）
-   → MD5/SHA256 校验 → 静默安装或提示用户安装
-   ```
+2. **版本升级流程**：升级检测/下载/校验/安装不在本 SDK——桌面端走原生升级链
+   （Tauri 绑 rust native、Wails 绑 go native，含验签/断点续传/静默安装），完整契约见
+   主仓库 `docs/specs/upgrade-integration.md`；网页端由宿主自行调公开接口
+   `POST /as/v1/upgrade/check` 提示刷新。
 
 3. **Token 存储**：桌面端应传入自定义 `storage` 实现（如 Tauri 的 `tauri-plugin-store`），避免 WebView localStorage 被清除。
 
@@ -371,4 +328,4 @@ sdk.stats.trackEvent('button_click', { button: 'buy' })
 - 所有公共 API 必须有完整 TypeScript 类型
 - 公共方法签名变更 = major 版本，优先加新方法不改旧的
 - 新模块使用 `create*Module(client: SdkClient)` 工厂函数模式
-- 错误处理：网络错误静默忽略（stats/upgrade/session），认证错误走拦截器
+- 错误处理：网络错误静默忽略（stats/session），认证错误走拦截器

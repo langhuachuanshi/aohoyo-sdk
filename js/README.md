@@ -3,7 +3,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript)
 ![MIT License](https://img.shields.io/badge/License-MIT-green)
 
-Aohoyo 前端 SDK，封装用户中心（UC 认证/资料/菜单）与管理服务（AS 设备/统计/升级/验证码/反馈）的客户端 API。供 **Web / 桌面端（Tauri/Wails/Electron）/ 移动端** 应用集成，通过 JWT Bearer Token 认证。
+Aohoyo 前端 SDK，封装用户中心（UC 认证/资料/菜单）与管理服务（AS 设备/统计/验证码/反馈/KV）的客户端 API。供 **Web / 桌面端（Tauri/Wails/Electron）/ 移动端** 应用集成，通过 JWT Bearer Token 认证。
 
 > 当前版本 v0.10.0。接口路由为服务前缀制：UC `/uc/v1/*`、AS `/as/v1/*`（`baseURL` 不带 `/api`）。
 
@@ -24,8 +24,8 @@ const sdk = createSdk({
   baseURL: '',                    // 或 'https://api.example.com'，不带 /api
   app_id: 'com.example.app',
   app_secret: '...',              // device/feedback 签名需要（可选）
-  channel_code: 'official',       // 可选，升级/设备上报用
-  current_version_code: 10203,    // 可选，升级检测 + 事件 app_version
+  channel_code: 'official',       // 可选，设备上报用
+  current_version_code: 10203,    // 可选，事件/设备上报的 app_version
   platform: 'windows',            // 可选
   onTokenExpired: () => router.push('/login'),
 })
@@ -107,11 +107,9 @@ await sdk.user.changePhone({ phone: newPhone, code: newCode, old_code: oldCode }
 | `device` | `sdk.device` | 设备上报/验证（HMAC 签名）、风险检测、安全策略 |
 | `oauth` | `sdk.oauth` | 第三方登录/绑定/解绑 |
 | `captcha` | `sdk.captcha` | 阿里云滑块 + 图片验证码 |
-| `upgrade` | `sdk.upgrade` | 版本检测、定时轮询、升级下载 |
 | `stats` | `sdk.stats` | 统计上报（自动 + trackPageView/trackEvent） |
 | `storage` | `sdk.storage` | 头像上传 |
 | `feedback` | `sdk.feedback` | 用户反馈（登录 JWT / 免登录 DeviceSign） |
-| `ads` | `sdk.ads` | 广告拉取（按广告位分组）+ 曝光/点击上报（登录 JWT / 免登录 DeviceSign 自动切换） |
 | `kv` | `sdk.kv` | KV 配置读取（本应用 + 公共区合并，免登录 DeviceSign；`get(keys?)` 不传全量、传 key 按需拉取） |
 
 ### SdkClient
@@ -125,24 +123,8 @@ await sdk.user.changePhone({ phone: newPhone, code: newCode, old_code: oldCode }
 | `sessionId` / `userId` | 统计口径共享的会话/用户 ID |
 | `isLoggedIn` | 是否已登录 |
 
-## 客户端广告（AD）
-
-```ts
-// 拉取在投广告（按广告位 code 分组）；登录走 JWT，免登录自动 DeviceSign（GET 空 body 签名）
-const ads = await sdk.ads.getAds('splash')   // 位 code 必传：客户端与后台的私有约定，无全量拉取
-const item = ads.positions.splash?.[0]
-
-if (item) {
-  await sdk.ads.reportImpression(item.id)   // 渲染后上报曝光
-  onClick(async () => {
-    await sdk.ads.reportClick(item.id)      // 点击先上报再跳转
-    window.open(item.link_url)
-  })
-}
-```
-
-> `ad_type` 决定渲染形态（1=文字 2=图片 3=弹窗 4=开屏 5=横幅），宽高建议值来自广告位配置。
-> 完整契约见主仓库 `docs/specs/ad.md`。
+> **广告 / 升级不在本 SDK**：客户端能力收归原生层——广告走原生模块拉取（桌面）或宿主后端代理（网页），
+> 升级检测/下载/安装走原生升级链。完整契约见主仓库 `docs/specs/ad.md`、`docs/specs/upgrade-integration.md`。
 
 ## 开发
 

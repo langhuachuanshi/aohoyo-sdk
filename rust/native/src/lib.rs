@@ -6,6 +6,7 @@
 //! Tauri 集成：在 `tauri::generate_handler!` 中包装本模块方法为 command，
 //! 或直接在 Rust 侧调用本模块原语（见 README 示例）。
 
+pub mod ads;
 pub mod download;
 pub mod fingerprint;
 pub mod install;

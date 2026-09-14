@@ -22,6 +22,8 @@
 | `install` | 启动安装器（Windows msi/exe 静默 + zip 解包自替换；Linux deb/rpm/AppImage；macOS pkg），分离进程 | 版本管理 |
 | `perform_upgrade` | 一站式升级：检测 → 验签 → 下载 → 校验 → 安装（on_stage 阶段回调） | 版本管理 |
 | `get_kv` | 拉取应用可见的 KV 配置（本应用 + 公共区合并，本应用同 key 优先；值已按类型解析；`keys` 传 `&[]` 全量、传指定键按需拉取） | KV 储存 |
+| `get_ads` | 拉取指定广告位的在投广告（DeviceSign，GET 空 body 签名；位 code 必传——客户端与后台的私有约定，无全量拉取） | 广告系统 |
+| `record_impression` / `record_click` | 广告曝光 / 点击上报（公开接口，限流 100/min） | 广告系统 |
 
 ## 使用（Tauri 集成）
 

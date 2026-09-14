@@ -9,11 +9,11 @@ export interface SdkConfig {
   app_id: string
   /** 应用密钥（管理后台获取） */
   app_secret?: string
-  /** 渠道代码，如 huawei、xiaomi（device/upgrade 模块共用） */
+  /** 渠道代码，如 huawei、xiaomi（device 上报携带） */
   channel_code?: string
-  /** 当前版本号（upgrade 模块使用） */
+  /** 当前版本号（auth/stats/device 上报携带） */
   current_version_code?: number
-  /** 当前平台（upgrade 模块使用），如 android/ios/windows/macos/linux */
+  /** 当前平台（device 上报携带），如 android/ios/windows/macos/linux */
   platform?: string
   /** Token 过期回调，各端自行处理跳转逻辑 */
   onTokenExpired?: () => void

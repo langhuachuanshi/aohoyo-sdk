@@ -1,8 +1,6 @@
 export type { DeviceInfo, NativeDeviceInfo, DeviceReportParams, DeviceVerifyParams, DeviceVerifyResponse, RiskFlag, SecurityConfig } from './device'
 export type { LoginParams, RegisterParams, LoginUser, LoginResponse, RefreshResponse, SessionMode } from './auth'
 export type { UserInfoResponse, MenuItem, PasswordPolicy } from './user'
-export type { UpgradeCheckParams, UpgradeCheckResponse, UpgradeStrategy, AutoCheckConfig } from './upgrade'
 export type { OAuthProvider, OAuthAuthURL, OAuthUnboundInfo, OAuthCallbackResult, OAuthBinding, OAuthBindParams } from './oauth'
 export type { StatsEventType, StatsEvent, StatsConfig } from './stats'
 export type { AliyunCaptchaRegion, AliyunCaptchaInitConfig, AliyunCaptchaCallbacks } from './captcha'
-export type { AdType, AdItem, ClientAdsResponse, AdReportParams } from './ad'

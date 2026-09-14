@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-14
+
+### 新增
+
+- **广告模块**: `get_ads(device_id, position_code)`（DeviceSign 鉴权，GET 空 body 签名，
+  按广告位 code 分组）+ `record_impression(ad_id, device_id)` / `record_click(ad_id, device_id)`
+  （公开接口，限流 100/min）。**位 code 必传**：位 code 为客户端构建 ↔ 后台广告位配置的
+  私有约定，SDK 不提供全量拉取（全量语义仅保留在服务端接口，供宿主后端代理场景使用）。
+  与 go/native `GetAds`/`RecordImpression`/`RecordClick` 同构；js `sdk.ads` 已于
+  @aohoyo/client-sdk 0.12.0 移除（客户端能力收归原生层）
+
 ## [0.4.2] - 2026-09-13
 
 ### 新增

@@ -8,13 +8,18 @@
 
 ### 破坏性变更
 
-- **`getAds(position)` 位 code 必传**: 签名从 `getAds(params?: GetAdsParams)` 改为
-  `getAds(position: string)`，移除「不传 = 拉取该应用全部广告位」语义，`GetAdsParams`
-  类型删除。位 code 是「某个客户端构建 ↔ 后台广告位配置」之间的私有约定，SDK 作为通用库
-  无法解释「该应用全部广告位」；且服务端广告位含公共区合并场景，全量 map 会出现宿主从未
-  定义的键，全量语义不可解释、还把「显示什么」的裁决权漏给调用方。服务端接口不动（仍支持
-  不传 = 全量），仅 SDK 层收窄。宿主原 `getAds()` / `getAds({ position })` 需改为
-  `getAds('splash')`。与 go `native.GetAds` 同步收窄
+- **移除 `sdk.ads` 广告模块**: 广告是「客户端渲染给用户看」的内容，展示裁决权应在可信层；
+  js 的 JWT/DeviceSign 双鉴权设计（免登录路径要求配置 app_secret）会把密钥逼进前端环境。
+  广告拉取改由原生层承担（Tauri 绑 rust native `get_ads`，Wails 绑 go native `GetAds`，
+  位 code 必传）；网页端由宿主自己的后端持密钥代理拉取（服务端接口不动，仍支持
+  不传 position = 全量）。`sdk.ads.getAds/reportImpression/reportClick` 及 `AdType`/
+  `AdItem`/`ClientAdsResponse`/`AdReportParams` 类型全部删除
+
+- **移除 `sdk.upgrade` 升级模块**: 客户端能力收归原生层——升级检测/验签/下载/安装走原生
+  升级链（rust native / go native 均已内置一站式 `PerformUpgrade`/`perform_upgrade`）；
+  网页端由宿主自行调公开接口 `POST /as/v1/upgrade/check` 提示刷新。
+  `checkUpgrade/getStrategy/startAutoCheck/stopAutoCheck` 及相关类型删除。
+  注意 `current_version_code`/`channel_code`/`platform` 配置字段保留（auth/stats/device 上报仍携带）
 
 ## [0.11.0] - 2026-09-13
 
